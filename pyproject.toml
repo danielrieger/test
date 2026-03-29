@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smlm_score"
+version = "0.1.0"
+description = "SMLM-IMP: Bayesian scoring of SMLM data against IMP structural models"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "TBD"}
+authors = [
+    {name = "Daniel Rieger"},
+]
+keywords = ["SMLM", "IMP", "NPC", "scoring", "Bayesian", "structural-biology"]
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "."}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "smlm_score*"]

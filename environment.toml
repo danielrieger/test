@@ -1,0 +1,21 @@
+# SMLM-IMP Project Environment Configuration
+# This file serves as the source of truth for paths and variables required to run this project.
+
+[python]
+# The absolute path to the project's specialized Python interpreter.
+# This environment was created using conda-pack and includes IMP, numpy, and other dependencies.
+executable = "C:\\envs\\py311\\python.exe"
+version = "3.11"
+
+[paths]
+# Crucial: This directory must be in the system PATH for DLLs (like IMP) to load correctly.
+library_bin = "C:\\envs\\py311\\Library\\bin"
+# The project root should be in PYTHONPATH to resolve the 'smlm_score' package.
+project_root = "C:\\Users\\User\\OneDrive\\Desktop\\Thesis\\smlm_score"
+# Thesis directory (parent of project root) also needed for package resolution in some scripts.
+thesis_dir = "C:\\Users\\User\\OneDrive\\Desktop\\Thesis"
+
+[mcp]
+# Description of the generic Python interpreter MCP server configuration.
+server_name = "python-generic"
+mcp_config_path = "C:\\Users\\User\\.gemini\\antigravity\\mcp_config.json"

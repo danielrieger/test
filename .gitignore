@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+
+# SMLM-IMP Simulation Outputs
+examples/*_output_*
+examples/bayesian_cluster_*
+examples/frequentist_cluster_*
+examples/brownian_cluster_*
+*.rmf3
+*.rmf
+pdbs/
+
+# Large Input Data (see README for download instructions)
+examples/PDB_Data/*.cif
+examples/ShareLoc_Data/*.csv
+
+# Project Caches & IDE
+.agents/
+.idea/
+.vscode/
+
+# Thesis Documents and Large Assets
+*.pdf
+*.zip
+examples/figures/
+examples/*.png
+figures/
+
+# Machine-specific
+activate_env.bat
+
+# Personal / thesis docs
+thesis_text.txt
+review_notes.md
+
+# Merge artifacts
+*.resolved
+*.resolved_*
+
+# Runtime logs
+*.log
