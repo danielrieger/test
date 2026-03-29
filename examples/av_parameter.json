@@ -1,0 +1,14 @@
+{
+    "chains": ["0", "0-2", "0-3", "0-4", "0-5", "0-6", "0-7", "0-8"],
+    "residue_index": 133,
+    "atom_name": "CA",
+    "av_parameter": {
+        "linker_length": 150.0,
+        "radii": [30.0, 0.0, 0.0],
+        "linker_width": 4.0,
+        "allowed_sphere_radius": 10.0,
+        "contact_volume_thickness": 0.0,
+        "contact_volume_trapped_fraction": -1,
+        "simulation_grid_resolution": 8.0
+    }
+}
