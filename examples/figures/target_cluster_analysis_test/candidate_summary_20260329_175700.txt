@@ -1,0 +1,14 @@
+Target cluster candidate analysis
+Recommended target_cluster_id: 484
+Applied filter window: {'x': (3118.422127239831, 8381.41919640109), 'y': (7915.650519055043, 13178.647200917967), 'z': None}
+Candidates scored: 8
+
+Top 10 candidates:
+  cluster=484, n=504, overall=0.7821, score=0.9697, geom=0.5006
+  cluster=297, n=466, overall=0.7554, score=0.9167, geom=0.5135
+  cluster=569, n=446, overall=0.7441, score=0.9044, geom=0.5035
+  cluster=286, n=571, overall=0.7412, score=0.9548, geom=0.4209
+  cluster=375, n=467, overall=0.7224, score=0.8882, geom=0.4737
+  cluster=497, n=459, overall=0.6820, score=0.8277, geom=0.4634
+  cluster=543, n=718, overall=0.4708, score=0.5472, geom=0.3562
+  cluster=389, n=618, overall=0.1509, score=0.0000, geom=0.3772

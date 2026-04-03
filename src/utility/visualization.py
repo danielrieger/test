@@ -44,6 +44,164 @@ def _style_axis(ax, title="", xlabel="", ylabel=""):
         spine.set_color(_GRID_COLOR)
 
 
+def _style_axis_3d(ax, title=""):
+    """Apply consistent dark theme styling to a 3D axis."""
+    ax.set_facecolor(_DARK_BG)
+    ax.xaxis.set_pane_color((0, 0, 0, 0))
+    ax.yaxis.set_pane_color((0, 0, 0, 0))
+    ax.zaxis.set_pane_color((0, 0, 0, 0))
+    
+    ax.set_title(title, color=_TEXT_COLOR, fontsize=14, fontweight="bold", pad=20)
+    ax.set_xlabel("x [nm]", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("y [nm]", color=_TEXT_COLOR, fontsize=10)
+    ax.set_zlabel("z [nm]", color=_TEXT_COLOR, fontsize=10)
+    
+    ax.tick_params(colors=_TEXT_COLOR, labelsize=8)
+    ax.xaxis.label.set_color(_TEXT_COLOR)
+    ax.yaxis.label.set_color(_TEXT_COLOR)
+    ax.zaxis.label.set_color(_TEXT_COLOR)
+    
+    # Grid lines
+    ax.xaxis.grid(True, color=_GRID_COLOR, linestyle='-', alpha=0.3)
+    ax.yaxis.grid(True, color=_GRID_COLOR, linestyle='-', alpha=0.3)
+    ax.zaxis.grid(True, color=_GRID_COLOR, linestyle='-', alpha=0.3)
+
+
+# --- Publication/Neutral Palette ---
+_PUB_BG = "#ffffff"
+_PUB_TEXT = "#333333"
+_PUB_GRID = "#e1e4e8"
+_PUB_BLUE = "#005a9c"
+_PUB_ORANGE = "#d95f02"
+
+
+def _style_axis_3d_pub(ax, title=""):
+    """Apply consistent publication (white) theme styling to a 3D axis."""
+    ax.set_facecolor(_PUB_BG)
+    ax.xaxis.set_pane_color((0, 0, 0, 0))
+    ax.yaxis.set_pane_color((0, 0, 0, 0))
+    ax.zaxis.set_pane_color((0, 0, 0, 0))
+    
+    ax.set_title(title, color=_PUB_TEXT, fontsize=14, fontweight="bold", pad=20)
+    ax.set_xlabel("x [nm]", color=_PUB_TEXT, fontsize=10)
+    ax.set_ylabel("y [nm]", color=_PUB_TEXT, fontsize=10)
+    ax.set_zlabel("z [nm]", color=_PUB_TEXT, fontsize=10)
+    
+    ax.tick_params(colors=_PUB_TEXT, labelsize=8)
+    ax.xaxis.label.set_color(_PUB_TEXT)
+    ax.yaxis.label.set_color(_PUB_TEXT)
+    ax.zaxis.label.set_color(_PUB_TEXT)
+    
+    ax.xaxis.grid(True, color=_PUB_GRID, linestyle='-', alpha=0.5)
+    ax.yaxis.grid(True, color=_PUB_GRID, linestyle='-', alpha=0.5)
+    ax.zaxis.grid(True, color=_PUB_GRID, linestyle='-', alpha=0.5)
+
+
+def plot_idealized_npc_3d(ax, positions, color=_PUB_ORANGE, alpha=0.6, s=150, double_ring=True):
+    """Plot perfectly round spheres representing an idealized NPC model."""
+    # Ensure positions is (N, 3)
+    pos = np.asarray(positions)
+    
+    if double_ring and len(pos) == 8:
+        # Replicate ring with Z-offset of ~50nm
+        # Based on PDB-7N85, the rings are separated by 30-50nm
+        # We'll use 40nm total separation for a balanced 'generic' look
+        pos_nuclear = pos.copy()
+        pos_nuclear[:, 2] += 20
+        pos_cyt = pos.copy()
+        pos_cyt[:, 2] -= 20
+        pos = np.vstack([pos_nuclear, pos_cyt])
+        
+    ax.scatter(pos[:, 0], pos[:, 1], pos[:, 2], 
+               c=color, s=s, marker="o", edgecolors="white", alpha=alpha, linewidths=0.5)
+
+
+def plot_isosurface_3d(ax, points, color=_PUB_BLUE, alpha=0.4, sigma=2.0, resolution=50):
+    """Render a 3D isosurface from a point cloud using Gaussian density."""
+    from skimage import measure
+    from scipy.ndimage import gaussian_filter
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    
+    # 1. Create voxel grid
+    limit = 80
+    grid_coords = np.linspace(-limit, limit, resolution)
+    dx = grid_coords[1] - grid_coords[0]
+    
+    # 3D Histogram to get point counts in boxes
+    # Points is (N, 3)
+    hist, _ = np.histogramdd(points, 
+                             bins=(grid_coords, grid_coords, grid_coords))
+    
+    # 2. Smooth with Gaussian to get continuous density
+    grid_smoothed = gaussian_filter(hist, sigma=sigma)
+    
+    # 3. Marching Cubes
+    # Level is set to a fraction of the max density
+    level = grid_smoothed.max() * 0.2
+    if level <= 0: level = 1e-9
+    
+    try:
+        verts, faces, _, _ = measure.marching_cubes(grid_smoothed, level=level)
+        
+        # Scale verts back to nm coordinate system
+        # Marching cubes indices are [0, resolution-1]
+        # We map them to [-limit, limit]
+        verts = verts * dx - limit
+        
+        # 4. Plot as a Poly3DCollection
+        mesh = Poly3DCollection(verts[faces], alpha=alpha)
+        mesh.set_facecolor(color)
+        mesh.set_edgecolor(color)
+        mesh.set_linewidth(0.05)
+        ax.add_collection3d(mesh)
+    except Exception as e:
+        print(f"Warning: Could not create isosurface: {e}")
+
+
+def plot_model_density_glow_2d(ax, model_positions, sigma=3.0, grid_res=200, color="#00ffff"):
+    """
+    Plot a soft 'glow' representation of the model density.
+    Used for fitting sequence figures in the style of Wu et al. (2023).
+    """
+    from scipy.ndimage import gaussian_filter
+    
+    limit = 100
+    x = np.linspace(-limit, limit, grid_res)
+    y = np.linspace(-limit, limit, grid_res)
+    X, Y = np.meshgrid(x, y)
+    
+    # Initialize grid
+    grid = np.zeros((grid_res, grid_res))
+    
+    # Each model point contributes a Gaussian
+    # We use a 2D histogram approach for speed
+    pos = np.asarray(model_positions)
+    # Map positions to grid indices
+    ix = ((pos[:, 0] + limit) / (2 * limit) * (grid_res - 1)).astype(int)
+    iy = ((pos[:, 1] + limit) / (2 * limit) * (grid_res - 1)).astype(int)
+    
+    # Filter valid indices
+    valid = (ix >= 0) & (ix < grid_res) & (iy >= 0) & (iy < grid_res)
+    for cx, cy in zip(ix[valid], iy[valid]):
+        grid[cy, cx] += 1.0
+        
+    # Smooth to create the 'glow'
+    # Sigma is in grid units, convert nm sigma to grid sigma
+    grid_sigma = sigma / (2 * limit / grid_res)
+    glow = gaussian_filter(grid, sigma=grid_sigma)
+    
+    # Normalize
+    if glow.max() > 0:
+        glow /= glow.max()
+        
+    # Create colormap: Transparent -> Cyan
+    cmap = LinearSegmentedColormap.from_list("glow", [(0,0,0,0), color], N=256)
+    
+    # Plot as image
+    ax.imshow(glow, extent=[-limit, limit, -limit, limit], 
+              origin='lower', cmap=cmap, interpolation='bilinear', alpha=0.9)
+
+
 # =========================================================================
 # 1.  DENSITY HEATMAP
 # =========================================================================

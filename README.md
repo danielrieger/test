@@ -47,18 +47,38 @@ The following large input files are **not included** in this repository. Downloa
 |------|------|--------|-------------|
 | `7N85-assembly1.cif` | 112 MB | [RCSB PDB: 7N85](https://www.rcsb.org/structure/7N85) | `examples/PDB_Data/` |
 | `data.csv` | 29 MB | [ShareLoc repository](https://shareloc.xyz) | `examples/ShareLoc_Data/` |
+## Visual Gallery
+
+The pipeline generates publication-quality visualizations for structural alignment and quality control.
+
+````carousel
+![Top-Ranked NPC (Cluster 347) — GMM Overlay](examples/figures/qc/gmm_cluster_overlay_rank0_id347.png)
+<!-- slide -->
+![Stylized 3D Isosurface Model](examples/figures/methodology/npc_isosurface_3d.png)
+<!-- slide -->
+![Structural Alignment PCA Summary](examples/figures/methodology/alignment_summary_pca.png)
+<!-- slide -->
+![Iterative 2D Fitting Sequence](examples/figures/methodology/fitting_sequence_2d.png)
+````
+
+## Performance Benchmarking
+
+A core technical contribution of this work is the implementation of a **Gaussian Mixture Model (GMM)** scoring engine that achieves constant-time evaluation relative to the number of experimental localizations ($N$).
+
+- **Distance/Tree Engines**: Scale linearly $O(N)$ or $O(N \log N)$, becoming a bottleneck at $>10,000$ points.
+- **GMM Engine**: After an initial $O(N)$ fitting step, evaluation complexity is $O(GK)$, where $G$ is the number of Gaussians and $K$ is the number of subunits. This results in **constant-time performance** for Bayesian optimization.
+
+![GMM Evaluation Scaling Trends](examples/figures/benchmarks/bench_figA_scaling.png)
 
 ## Quick Start
 
-1. Download and place the input data files (see above).
-2. Configure the pipeline via `examples/pipeline_config.json`.
-3. Run the example:
-
-```bash
-python examples/NPC_example_BD.py
-```
-
-This runs the full pipeline: load data → cluster → align → score → optimize → validate.
+1. **Setup**: Clone the repo and install the environment (see Setup above).
+2. **Data**: Place `7N85-assembly1.cif` in `examples/PDB_Data/` and `data.csv` in `examples/ShareLoc_Data/`.
+3. **Run Pipeline**: `python examples/NPC_example_BD.py`
+4. **Generate Thesis Figures**:
+   - `python examples/visualize_alignment_stylized_3d.py` (3D Gallery)
+   - `python examples/visualize_gmm_selection.py` (BIC & GMM QC)
+   - `python examples/benchmark_scoring.py` (Performance Scaling)
 
 ## Project Structure
 
@@ -67,90 +87,30 @@ smlm_score/
 ├── src/
 │   ├── imp_modeling/
 │   │   ├── scoring/             # Tree, GMM, Distance scoring + CUDA kernels
-│   │   ├── restraint/           # IMP restraint wrappers with gradient support
-│   │   ├── model_setup/         # Top-level model container
-│   │   ├── brownian_dynamics/   # BD simulation setup
-│   │   └── simulation/          # CG optimizer + REMC sampler
+│   │   └── restraint/           # IMP restraint wrappers (ScoringRestraintWrapper)
 │   ├── utility/
-│   │   ├── data_handling.py     # SMLM filtering, clustering, AV computation
-│   │   ├── input.py             # CSV/JSON loading
-│   │   ├── plot.py              # GMM diagnostics plots
-│   │   └── visualization.py     # Publication-quality figures
-│   ├── validation/
-│   │   └── validation.py        # Separation + held-out validation
-│   └── benchmarking/
-│       └── gmm_benchmarks.py    # GMM performance benchmarks
-├── tests/                       # 97 pytest tests (unit + integration)
-├── examples/                    # Pipeline examples and scripts
-├── pyproject.toml               # Package metadata
-└── requirements.txt             # Python dependencies
+│   │   ├── data_handling.py     # Structural ranking, HDBSCAN, PCA alignment
+│   │   └── visualization.py     # Stylized 3D (Pyvista) & Publication White themes
+├── examples/
+│   ├── figures/                 # Categorized Thesis Assets
+│   │   ├── methodology/         # 3D, PCA summary, fitting sequences
+│   │   ├── benchmarks/          # Scaling and performance plots
+│   │   └── qc/                  # GMM BIC selection and top-ranked overlays
+│   ├── benchmark_scoring.py     # Performance scaling benchmark
+│   └── visualize_gmm_selection.py # Intelligent NPC selection & BIC plots
+└── tests/                       # 97 pytest tests
 ```
-
-## Configuration Reference
-
-The pipeline is configured via `examples/pipeline_config.json`:
-
-```json
-{
-    "paths": {
-        "smlm_data": "ShareLoc_Data/data.csv",
-        "pdb_data": "PDB_Data/7N85-assembly1.cif",
-        "av_parameters": "av_parameter.json"
-    },
-    "filtering": {
-        "type": "random | filter | full",
-        "filter": { "x_range": [min, max], "y_range": [min, max] },
-        "random": { "size_percentage": 15 }
-    },
-    "clustering": {
-        "min_cluster_size": 15,
-        "min_npc_points": 120,
-        "perform_geometric_merging": false
-    },
-    "optimization": {
-        "mode": "bayesian | frequentist | brownian",
-        "brownian": { "temperature_k": 300, "max_time_step_fs": 50000, "number_of_bd_steps": 500 },
-        "frequentist": { "scoring_type": "Tree", "max_cg_steps": 200 },
-        "bayesian": { "scoring_type": "GMM", "number_of_frames": 20, "monte_carlo_steps": 10 }
-    }
-}
-```
-
-## Scoring Functions
-
-### Tree Score
-
-KD-tree-backed log-likelihood with search radius pruning. Supports analytical gradients for optimization. Efficient for small model sizes (falls back to exact computation when the number of AVs is small).
-
-### GMM Score
-
-Fits a Gaussian Mixture Model to the SMLM data using BIC-optimal component selection, then evaluates the log-likelihood of model AV positions under the GMM. Uses CUDA GPU kernels for large datasets.
-
-### Distance Score
-
-Pairwise distance log-likelihood with log-sum-exp numerical stability. Each data point contributes via a Gaussian kernel centered on the model-data distance, with combined model + data covariance (Bonomi et al. 2019).
-
-## Optimization Modes
-
-### Brownian Dynamics
-
-Geometric relaxation via `IMP.atom.BrownianDynamics`. Configures AV particles with diffusion coefficients and XYZR decorators. Outputs RMF trajectories for visualization.
-
-### Conjugate Gradients (Frequentist)
-
-Single-point MLE optimization via `IMP.core.ConjugateGradients`. Requires gradient-compatible scoring (Tree or Distance). Reports coordinate shifts and objective improvement.
-
-### Replica Exchange Monte Carlo (Bayesian)
-
-Posterior sampling via `IMP.pmi.macros.ReplicaExchange`. Groups AVs into a rigid body and samples structural conformations with Metropolis acceptance.
 
 ## Validation
 
-The validation module (`src/validation/validation.py`) implements two tests:
+The validation module implements two tests:
+1. **Separation test**: Confirms that density-normalized scores for valid NPC clusters outperform noise/off-target clusters.
+2. **Held-out test**: Verifies that the structural signal is captured by comparing scores across spatially disjoint subsets of the same NPC localization cloud.
 
-1. **Separation test**: Compares density-normalized scores of valid NPC clusters against noise clusters. All scoring types should show valid > noise (less negative = better fit).
+## License
 
-2. **Held-out test**: Compares valid NPC scores against scores computed on spatially disjoint held-out data. Tree scoring yields 0 for held-out data (no neighbors within radius), which is the expected behavior.
+TBD
+), which is the expected behavior.
 
 ## Testing
 

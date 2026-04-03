@@ -145,7 +145,7 @@ def main():
         cluster_selection_method='leaf'
     )
 
-    out_dir = os.path.join(THESIS_ROOT, "smlm_score", "figures")
+    out_dir = os.path.join(THESIS_ROOT, "smlm_score", "examples", "figures", "qc")
     os.makedirs(out_dir, exist_ok=True)
 
     _make_cluster_map(

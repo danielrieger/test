@@ -193,5 +193,5 @@ def generate_thesis_figures(results, output_dir):
 
 if __name__ == '__main__':
     res = benchmark_scoring_methods()
-    out_dir = os.path.join(THESIS_ROOT, "smlm_score", "figures")
+    out_dir = os.path.join(THESIS_ROOT, "smlm_score", "examples", "figures", "benchmarks")
     generate_thesis_figures(res, out_dir)

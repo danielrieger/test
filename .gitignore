@@ -26,13 +26,6 @@ examples/ShareLoc_Data/*.csv
 .idea/
 .vscode/
 
-# Thesis Documents and Large Assets
-*.pdf
-*.zip
-examples/figures/
-examples/*.png
-figures/
-
 # Machine-specific
 activate_env.bat
 
