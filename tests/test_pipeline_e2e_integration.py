@@ -6,14 +6,14 @@ import pandas as pd
 import pytest
 from pathlib import Path
 
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import (
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     isolate_individual_npcs,
     align_npc_cluster_pca,
     get_held_out_complement
 )
-from smlm_score.src.validation.validation import run_full_validation
+from smlm_score.validation.validation import run_full_validation
 
 
 @pytest.mark.integration

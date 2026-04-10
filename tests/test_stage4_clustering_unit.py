@@ -5,7 +5,7 @@ Unit tests for Stage 4 clustering behavior with mocking.
 import numpy as np
 import pytest
 
-from smlm_score.src.utility import data_handling
+from smlm_score.utility import data_handling
 
 
 @pytest.mark.unit

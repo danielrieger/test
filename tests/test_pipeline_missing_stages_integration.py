@@ -8,12 +8,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from smlm_score.src.utility import input as input_mod
-from smlm_score.src.utility import data_handling
-from smlm_score.src.imp_modeling.model_setup import model as model_mod
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components as run_test_gmm_components
-from smlm_score.src.imp_modeling.simulation import mcmc_sampler
-from smlm_score.src.validation.validation import run_full_validation
+from smlm_score.utility import input as input_mod
+from smlm_score.utility import data_handling
+from smlm_score.imp_modeling.model_setup import model as model_mod
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components as run_test_gmm_components
+from smlm_score.imp_modeling.simulation import mcmc_sampler
+from smlm_score.validation.validation import run_full_validation
 
 
 @pytest.mark.integration

@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 from typing import List, Dict, Any
 
 # Import project modules (Analog zu NPC_example_BD.py)
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.input import read_parameters_from_json, read_experimental_data
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data, compute_av
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.input import read_parameters_from_json, read_experimental_data
+from smlm_score.utility.data_handling import flexible_filter_smlm_data, compute_av
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
 
 
 class ScoringBenchmark:

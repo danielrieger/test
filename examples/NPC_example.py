@@ -5,12 +5,12 @@ import numpy as np
 from sklearn.neighbors import KDTree  # Ensure this is imported if KDTree is used directly here
 
 # Import your project modules
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.input import read_parameters_from_json
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data, compute_av
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components  # Only needed if SCORING_TYPE is GMM
-from smlm_score.src.imp_modeling.brownian_dynamics.simulation_setup import run_brownian_dynamics_simulation
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.input import read_parameters_from_json
+from smlm_score.utility.data_handling import flexible_filter_smlm_data, compute_av
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components  # Only needed if SCORING_TYPE is GMM
+from smlm_score.imp_modeling.brownian_dynamics.simulation_setup import run_brownian_dynamics_simulation
 
 # Define paths
 smlm_data_path = "ShareLoc_Data/data.csv"

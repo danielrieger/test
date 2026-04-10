@@ -12,11 +12,11 @@ THESIS_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
 if THESIS_ROOT not in sys.path:
     sys.path.insert(0, THESIS_ROOT)
 
-from smlm_score.src.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
-from smlm_score.src.imp_modeling.scoring.tree_score import computescoretree
-from smlm_score.src.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu, test_gmm_components
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data
+from smlm_score.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
+from smlm_score.imp_modeling.scoring.tree_score import computescoretree
+from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu, test_gmm_components
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import flexible_filter_smlm_data
 
 # Color settings
 _DARK_BG = "#0d1117"
@@ -105,7 +105,7 @@ def benchmark_experimental():
         t0 = time.time()
         # On experimental data, fitting Gaussians is much harder and slower.
         # We cap components tightly so benchmark finishes in reasonable time.
-        gmm_res, gmm_sel, gmm_mean, gmm_cov, gmm_weight = test_gmm_components(data, component_min=1, component_max=8)
+        gmm_res, gmm_sel, gmm_mean, gmm_cov, gmm_weight = test_gmm_components(data, component_min=1, component_max=8, reg_covar=1e-3)
         t_init_gmm = (time.time() - t0) * 1000
         results['GMM']['init'].append(t_init_gmm)
         def eval_gmm():
@@ -164,11 +164,11 @@ def generate_experimental_figures(results, output_dir):
     evals_per_step = [results[m]['eval'][idx_target] for m in methods]
     
     # We will make 2 subplots side-by-side
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), facecolor=_DARK_BG)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 7), facecolor=_DARK_BG)
     fig.patch.set_facecolor(_DARK_BG)
     
     x = np.arange(len(methods))
-    width = 0.5
+    width = 0.6
     
     # ---------------------------------------------------------
     # SUBPLOT 1: Single Scoring Check (Initialization + 1 Eval)
@@ -176,12 +176,13 @@ def generate_experimental_figures(results, output_dir):
     ax1.set_facecolor(_DARK_BG)
     single_eval = [e * 1 for e in evals_per_step]
     
-    ax1.bar(x, inits, width, label='Initialization Cost (Once)', color='#8b949e')
-    ax1.bar(x, single_eval, width, bottom=inits, label='Single Scoring Evaluation', 
+    # Show both initialization (fitting/tree build) and one evaluation
+    ax1.bar(x, inits, width, label='Initialization (Fitting/Build)', color='#8b949e')
+    ax1.bar(x, single_eval, width, bottom=inits, label='Single Eval Latency', 
             color=[_COLORS[m] for m in methods], alpha=0.9)
     
-    ax1.set_ylabel("Total Execution Time (ms) [Log Scale]", color=_TEXT_COLOR, fontsize=12)
-    ax1.set_title(f"A) Single Evaluation\n(GMM is the slowest)", color='white', pad=15, fontsize=14)
+    ax1.set_ylabel("Execution Time (ms) [Log Scale]", color=_TEXT_COLOR, fontsize=12)
+    ax1.set_title(f"A) Single Latency Check\n(Fitting Cost vs. Neighbor Search)", color='white', pad=20, fontsize=14)
     ax1.set_xticks(x)
     ax1.set_xticklabels(methods, color=_TEXT_COLOR, fontsize=12)
     ax1.tick_params(axis='y', colors=_TEXT_COLOR)
@@ -192,7 +193,9 @@ def generate_experimental_figures(results, output_dir):
         
     for i in range(len(methods)):
         total_time = inits[i] + single_eval[i]
-        ax1.text(x[i], max(total_time * 1.5, 0.1), f"{total_time:,.1f} ms", ha='center', color='white', fontweight='bold')
+        # Calculate Y position carefully for log scale
+        y_pos = total_time * 1.5
+        ax1.text(x[i], y_pos, f"{total_time:,.1f} ms", ha='center', color='white', fontweight='bold', fontsize=10)
     
     # ---------------------------------------------------------
     # SUBPLOT 2: MCMC Sampling Check (Initialization + 10,000 Evals)
@@ -202,10 +205,10 @@ def generate_experimental_figures(results, output_dir):
     mcmc_eval = [e * steps for e in evals_per_step]
     
     ax2.bar(x, inits, width, label='Initialization Cost (Once)', color='#8b949e')
-    ax2.bar(x, mcmc_eval, width, bottom=inits, label=f'Optimization Cost ({steps:,} evals)', 
+    ax2.bar(x, mcmc_eval, width, bottom=inits, label=f'Sampling Phase ({steps:,} steps)', 
             color=[_COLORS[m] for m in methods], alpha=0.9)
     
-    ax2.set_title(f"B) MCMC Optimization ({steps:,} steps)\n(GMM is the fastest)", color='white', pad=15, fontsize=14)
+    ax2.set_title(f"B) Optimization Phase ({steps:,} steps)\n(Convergence throughput)", color='white', pad=20, fontsize=14)
     ax2.set_xticks(x)
     ax2.set_xticklabels(methods, color=_TEXT_COLOR, fontsize=12)
     ax2.tick_params(axis='y', colors=_TEXT_COLOR)
@@ -216,16 +219,18 @@ def generate_experimental_figures(results, output_dir):
         
     for i in range(len(methods)):
         total_time = inits[i] + mcmc_eval[i]
-        ax2.text(x[i], max(total_time * 1.5, 0.1), f"{total_time:,.0f} ms", ha='center', color='white', fontweight='bold')
+        y_pos = total_time * 1.5
+        ax2.text(x[i], y_pos, f"{total_time:,.0f} ms", ha='center', color='white', fontweight='bold', fontsize=10)
         
     # Super title highlighting the experimental dataset context
-    plt.suptitle(f"Performance Trade-off on Experimental Data (N={sizes[idx_target]} points)", color='white', fontsize=16)
+    plt.suptitle(f"Computational Trade-off: Experimental Data Cut (N={sizes[idx_target]})", color='white', fontsize=16, y=0.96)
     
     # Shared Legend
-    handles, labels = ax2.get_legend_handles_labels()
+    handles, labels = ax1.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', ncol=2, facecolor=_DARK_BG, edgecolor='#30363d', labelcolor='white')
     
-    plt.subplots_adjust(bottom=0.15, wspace=0.25)
+    # Adjusted rect to provide more room for suptitle and legend
+    fig.tight_layout(rect=[0, 0.08, 1, 0.90]) 
     
     plotB_path = os.path.join(output_dir, "bench_figD_exp_tradeoff.png")
     fig.savefig(plotB_path, dpi=300, facecolor=fig.get_facecolor(), bbox_inches='tight')
@@ -234,5 +239,5 @@ def generate_experimental_figures(results, output_dir):
 
 if __name__ == '__main__':
     res = benchmark_experimental()
-    out_dir = os.path.join(THESIS_ROOT, "smlm_score", "figures")
+    out_dir = os.path.join(THIS_DIR, "figures", "benchmarks")
     generate_experimental_figures(res, out_dir)

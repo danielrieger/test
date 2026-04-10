@@ -1,11 +1,11 @@
 import IMP
 import IMP.core
 import IMP.atom # Likely needed for simulation setup later
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.input import read_parameters_from_json # Assuming function name based on [6]
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data, compute_av # Assuming function names based on [5, 6]
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components # Assuming function name based on [9, 6]
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.input import read_parameters_from_json # Assuming function name based on [6]
+from smlm_score.utility.data_handling import flexible_filter_smlm_data, compute_av # Assuming function names based on [5, 6]
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components # Assuming function name based on [9, 6]
 # May need other IMP modules like IMP.bff depending on function implementations
 
 # Define paths (adjust if necessary) [6]
@@ -143,11 +143,11 @@ import IMP
 import IMP.algebra
 
 # Custom Imports
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import *
-from smlm_score.src.utility.input import *
-from smlm_score.src.utility.data_handling import *
-from smlm_score.src.utility.plot import *
-from smlm_score.src.imp_modeling.scoring.gmm_score import *
+from smlm_score.imp_modeling.restraint.scoring_restraint import *
+from smlm_score.utility.input import *
+from smlm_score.utility.data_handling import *
+from smlm_score.utility.plot import *
+from smlm_score.imp_modeling.scoring.gmm_score import *
 
 
 ####################

@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from smlm_score.src.utility.data_handling import isolate_individual_npcs
+from smlm_score.utility.data_handling import isolate_individual_npcs
 
 @pytest.mark.unit
 def test_stage4_empty_data_returns_stable_dict():

@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from smlm_score.src.utility import visualization as vis
+from smlm_score.utility import visualization as vis
 
 
 @pytest.mark.integration

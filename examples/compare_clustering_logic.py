@@ -2,8 +2,8 @@ import sys, os
 import numpy as np
 from sklearn.cluster import HDBSCAN
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data, isolate_individual_npcs
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import flexible_filter_smlm_data, isolate_individual_npcs
 
 # 1. Load data
 raw = read_experimental_data(os.path.join(os.path.dirname(__file__), "ShareLoc_Data/data.csv"))

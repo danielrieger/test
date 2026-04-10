@@ -33,7 +33,7 @@
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",
-            "number_of_frames": 20,
+            "number_of_frames": 2,
             "monte_carlo_steps": 10
         },
         "frequentist": {

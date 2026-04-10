@@ -15,15 +15,15 @@ _thesis_dir = os.path.abspath(os.path.join(_project_dir, ".."))
 if _thesis_dir not in sys.path:
     sys.path.insert(0, _thesis_dir)
 
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.data_handling import (
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.data_handling import (
     align_npc_cluster_pca,
     compute_av,
     flexible_filter_smlm_data,
     isolate_individual_npcs,
 )
-from smlm_score.src.utility.input import read_experimental_data, read_parameters_from_json
-from smlm_score.src.utility.visualization import plot_model_density_glow_2d
+from smlm_score.utility.input import read_experimental_data, read_parameters_from_json
+from smlm_score.utility.visualization import plot_model_density_glow_2d
 
 def _load_config(config_path):
     with open(config_path, "r", encoding="utf-8") as f:

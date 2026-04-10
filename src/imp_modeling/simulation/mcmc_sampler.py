@@ -60,13 +60,18 @@ def run_bayesian_sampling(
     # 2. Tell the sampler which energy scores to evaluate
     if hasattr(scoring_restraint_wrapper, "set_return_objective"):
         scoring_restraint_wrapper.set_return_objective(True)
-    if hasattr(scoring_restraint_wrapper, "add_to_model"):
-        scoring_restraint_wrapper.add_to_model()
-    output_objects = [scoring_restraint_wrapper]
-
     # Ensure output directory exists
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+
+    # Enable trajectory logging before starting REMC
+    if hasattr(scoring_restraint_wrapper, "enable_trajectory_logging"):
+        scoring_restraint_wrapper.enable_trajectory_logging(output_dir)
+
+    if hasattr(scoring_restraint_wrapper, "add_to_model"):
+        scoring_restraint_wrapper.add_to_model()
+
+    output_objects = [scoring_restraint_wrapper]
 
     # 3. Initialize the standard IMP Replica Exchange Macro
     rex = IMP.pmi.macros.ReplicaExchange(

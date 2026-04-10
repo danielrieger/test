@@ -6,12 +6,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import numpy as np
 import matplotlib.pyplot as plt
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import (
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     isolate_individual_npcs
 )
-from smlm_score.src.utility.visualization import plot_cluster_context_map
+from smlm_score.utility.visualization import plot_cluster_context_map
 
 # 1. Load Data
 print("Loading experimental SMLM data...")

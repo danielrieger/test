@@ -5,7 +5,7 @@ Integration tests for Stage 4 clustering behavior with real sklearn clustering.
 import numpy as np
 import pytest
 
-from smlm_score.src.utility import data_handling
+from smlm_score.utility import data_handling
 
 
 def _make_gaussian_cluster(center, n_points, sigma, seed):

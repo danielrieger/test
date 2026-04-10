@@ -12,9 +12,9 @@ THESIS_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
 if THESIS_ROOT not in sys.path:
     sys.path.insert(0, THESIS_ROOT)
 
-from smlm_score.src.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
-from smlm_score.src.imp_modeling.scoring.tree_score import computescoretree
-from smlm_score.src.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu, test_gmm_components
+from smlm_score.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
+from smlm_score.imp_modeling.scoring.tree_score import computescoretree
+from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu, test_gmm_components
 
 # Color settings
 _DARK_BG = "#0d1117"
@@ -163,13 +163,12 @@ def generate_thesis_figures(results, output_dir):
     width = 0.5
     
     # Stacked bars: Initializing Cost + Optimization Cost
-    bottoms = inits
-    ax.bar(x, inits, width, label='Initialization Cost (Once)', color='#8b949e')
-    ax.bar(x, total_evals, width, bottom=inits, label=f'Optimization Cost ({steps:,} eval steps)', 
+    ax.bar(x, inits, width, label='Initialization (Fitting/Build)', color='#8b949e')
+    ax.bar(x, total_evals, width, bottom=inits, label=f'Optimization Phase ({steps:,} steps)', 
            color=[_COLORS[m] for m in methods], alpha=0.9)
     
-    ax.set_ylabel("Total Execution Time (ms) [Log Scale]", color=_TEXT_COLOR, fontsize=12)
-    ax.set_title(f"Performance Trade-off\nMCMC Stage (Standard NPC N=1000)", color='white', pad=15, fontsize=14)
+    ax.set_ylabel("Execution Time (ms) [Log Scale]", color=_TEXT_COLOR, fontsize=12)
+    ax.set_title(f"MCMC Performance Trade-off\n(Fitting/Build Cost vs. Sampling Throughput)", color='white', pad=20, fontsize=14)
     ax.set_xticks(x)
     ax.set_xticklabels(methods, color=_TEXT_COLOR, fontsize=12)
     ax.tick_params(axis='y', colors=_TEXT_COLOR)

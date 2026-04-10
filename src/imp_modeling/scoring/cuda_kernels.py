@@ -5,7 +5,7 @@ Provides GPU-accelerated versions of compute_nb_gmm and _compute_distance_score_
 using numba.cuda. Falls back gracefully to CPU when CUDA is unavailable.
 
 Usage:
-    from smlm_score.src.imp_modeling.scoring.cuda_kernels import (
+    from smlm_score.imp_modeling.scoring.cuda_kernels import (
         HAS_CUDA, compute_nb_gmm_gpu, compute_distance_score_gpu
     )
 """

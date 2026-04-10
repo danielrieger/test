@@ -14,23 +14,23 @@ from sklearn.neighbors import KDTree
 # ============================================================================
 
 # GMM core function (Numba JIT compiled)
-from smlm_score.src.imp_modeling.scoring.gmm_score import compute_nb_gmm
+from smlm_score.imp_modeling.scoring.gmm_score import compute_nb_gmm
 # GMM CPU-only for direct testing
-from smlm_score.src.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu
+from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu
 
 # Distance core function (Numba JIT compiled)
-from smlm_score.src.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
+from smlm_score.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
 
 # Tree score variance helper
-from smlm_score.src.imp_modeling.scoring.tree_score import _extract_scalar_variance
-from smlm_score.src.imp_modeling.scoring.tree_score import (
+from smlm_score.imp_modeling.scoring.tree_score import _extract_scalar_variance
+from smlm_score.imp_modeling.scoring.tree_score import (
     TREE_EXACT_MODEL_COUNT_THRESHOLD,
 )
 
 # CUDA availability
-from smlm_score.src.imp_modeling.scoring.cuda_kernels import HAS_CUDA
+from smlm_score.imp_modeling.scoring.cuda_kernels import HAS_CUDA
 if HAS_CUDA:
-    from smlm_score.src.imp_modeling.scoring.cuda_kernels import (
+    from smlm_score.imp_modeling.scoring.cuda_kernels import (
         compute_nb_gmm_gpu, compute_distance_score_gpu
     )
 

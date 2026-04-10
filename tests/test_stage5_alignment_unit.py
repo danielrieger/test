@@ -5,7 +5,7 @@ Unit tests for Stage 5 PCA alignment behavior.
 import numpy as np
 import pytest
 
-from smlm_score.src.utility.data_handling import align_npc_cluster_pca
+from smlm_score.utility.data_handling import align_npc_cluster_pca
 
 
 def _make_tilted_ring(n_points=128, radius=50.0):

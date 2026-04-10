@@ -16,8 +16,8 @@ keywords = ["SMLM", "IMP", "NPC", "scoring", "Bayesian", "structural-biology"]
 dependencies = []
 
 [tool.setuptools]
-package-dir = {"" = "."}
+package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*", "smlm_score*"]
+where = ["src"]
+include = ["smlm_score*"]

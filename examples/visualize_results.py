@@ -22,19 +22,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 import IMP.core
 
-from smlm_score.src.utility.input import read_experimental_data, read_parameters_from_json
-from smlm_score.src.utility.data_handling import (
+from smlm_score.utility.input import read_experimental_data, read_parameters_from_json
+from smlm_score.utility.data_handling import (
     isolate_individual_npcs,
     align_npc_cluster_pca,
     flexible_filter_smlm_data,
     compute_av,
 )
-from smlm_score.src.utility.visualization import (
+from smlm_score.utility.visualization import (
     plot_density_2d,
     plot_score_comparison,
     plot_density_contour,
 )
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
 
 # ── paths (relative to examples/) ────────────────────────────────────────
 SMLM_DATA_PATH = "ShareLoc_Data/data.csv"
@@ -148,7 +148,7 @@ plot_density_contour(
 # Quick scoring: compute Tree scores for a few valid + noise clusters
 print("\n--- Figure 3: Score comparison ---")
 from sklearn.neighbors import KDTree
-from smlm_score.src.imp_modeling.scoring.tree_score import computescoretree
+from smlm_score.imp_modeling.scoring.tree_score import computescoretree
 
 cluster_scores = {}
 

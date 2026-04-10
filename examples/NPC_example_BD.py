@@ -8,21 +8,21 @@ import os
 import shutil
 
 # Import your project modules
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.input import read_parameters_from_json
-from smlm_score.src.utility.data_handling import (
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.input import read_parameters_from_json
+from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     compute_av,
     isolate_individual_npcs,
     align_npc_cluster_pca,
     get_held_out_complement
 )
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.imp_modeling.scoring.gmm_score import test_gmm_components
-from smlm_score.src.imp_modeling.brownian_dynamics.simulation_setup import run_brownian_dynamics_simulation
-from smlm_score.src.imp_modeling.simulation.mcmc_sampler import run_bayesian_sampling
-from smlm_score.src.imp_modeling.simulation.frequentist_optimizer import run_frequentist_optimization
-from smlm_score.src.validation.validation import run_full_validation
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
+from smlm_score.imp_modeling.brownian_dynamics.simulation_setup import run_brownian_dynamics_simulation
+from smlm_score.imp_modeling.simulation.mcmc_sampler import run_bayesian_sampling
+from smlm_score.imp_modeling.simulation.frequentist_optimizer import run_frequentist_optimization
+from smlm_score.validation.validation import run_full_validation
 
 # --- 1. Load Pipeline Configuration ---
 config_path = "pipeline_config.json"

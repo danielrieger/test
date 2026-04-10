@@ -23,7 +23,7 @@ Score normalization and comparison direction are scoring-type-aware:
                   confirming the scoring function correctly rejects non-NPC data.
 
 Usage from NPC_example_BD.py:
-    from smlm_score.src.validation.validation import (
+    from smlm_score.validation.validation import (
         validate_scoring_separation,
         validate_with_held_out_data,
         run_full_validation,

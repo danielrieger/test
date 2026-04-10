@@ -17,15 +17,15 @@ THESIS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."
 if THESIS_ROOT not in sys.path:
     sys.path.insert(0, THESIS_ROOT)
 
-from smlm_score.src.imp_modeling.scoring.distance_score import (
+from smlm_score.imp_modeling.scoring.distance_score import (
     _compute_distance_score_cpu,
     _compute_distance_score_and_grad_cpu
 )
-from smlm_score.src.imp_modeling.scoring.tree_score import (
+from smlm_score.imp_modeling.scoring.tree_score import (
     computescoretree,
     computescoretree_with_grad
 )
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import (
+from smlm_score.imp_modeling.restraint.scoring_restraint import (
     ScoringRestraintWrapper,
 )
 

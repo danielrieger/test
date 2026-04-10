@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from smlm_score.src.utility.data_handling import align_npc_cluster_pca
+from smlm_score.utility.data_handling import align_npc_cluster_pca
 
 @pytest.mark.unit
 def test_stage5_alignment_inverse_transform_integrity():

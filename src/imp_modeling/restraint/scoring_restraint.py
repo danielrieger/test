@@ -1,3 +1,4 @@
+import os
 import typing
 
 import IMP
@@ -8,12 +9,12 @@ import IMP.pmi.restraints
 import IMP.pmi.tools
 import numpy as np
 
-from smlm_score.src.imp_modeling.scoring.distance_score import (
+from smlm_score.imp_modeling.scoring.distance_score import (
     _compute_distance_score_and_grad_cpu,
     computescoresimple,
 )
-from smlm_score.src.imp_modeling.scoring.gmm_score import compute_nb_gmm
-from smlm_score.src.imp_modeling.scoring.tree_score import (
+from smlm_score.imp_modeling.scoring.gmm_score import compute_nb_gmm
+from smlm_score.imp_modeling.scoring.tree_score import (
     computescoretree,
     computescoretree_with_grad,
 )
@@ -318,6 +319,7 @@ class ScoringRestraintWrapper(IMP.pmi.restraints.RestraintBase):
     ):
         super().__init__(m, label=label)
         self.type = type
+        self.avs_decorators = avs
         self.scoring_restraint_instance = None
 
         if type == "Distance":
@@ -370,7 +372,66 @@ class ScoringRestraintWrapper(IMP.pmi.restraints.RestraintBase):
         if self.scoring_restraint_instance is not None:
             self.scoring_restraint_instance.set_return_objective(enabled)
 
+    def _log_trajectory_frame(self, frame_idx, score):
+        """Side-channel log of raw and aligned coordinates for debugging."""
+        if not hasattr(self, "_trajectory_csv_path"):
+            return
+
+        import csv
+        file_exists = os.path.exists(self._trajectory_csv_path)
+        
+        # 1. Extract Current Coordinates
+        # Raw IMP space (Angstroms)
+        raw_coords = [np.array(IMP.core.XYZ(av).get_coordinates()) for av in self.avs_decorators]
+        # Aligned Data space (nm)
+        data_coords = self.scoring_restraint_instance._current_model_coords()
+        
+        # 2. Metadata: Centroid and RMSD
+        centroid_raw = np.mean(raw_coords, axis=0)
+        centroid_data = np.mean(data_coords, axis=0)
+        
+        if self._initial_raw_coords is None:
+            self._initial_raw_coords = raw_coords
+
+        rmsd = np.sqrt(np.mean(np.sum((np.array(raw_coords) - np.array(self._initial_raw_coords))**2, axis=1)))
+
+        with open(self._trajectory_csv_path, 'a', newline='') as f:
+            writer = csv.writer(f)
+            
+            # Write Header if new file
+            if not file_exists:
+                header = ["frame", "score", "rmsd_raw", "centroid_raw_x", "centroid_raw_y", "centroid_raw_z", 
+                          "centroid_data_x", "centroid_data_y", "centroid_data_z"]
+                for i in range(len(raw_coords)):
+                    header += [f"av_{i}_raw_x", f"av_{i}_raw_y", f"av_{i}_raw_z"]
+                for i in range(len(data_coords)):
+                    header += [f"av_{i}_data_x", f"av_{i}_data_y", f"av_{i}_data_z"]
+                writer.writerow(header)
+
+            # Write Data Row
+            row = [frame_idx, score, rmsd, *centroid_raw, *centroid_data]
+            for c in raw_coords: row.extend(c)
+            for c in data_coords: row.extend(c)
+            writer.writerow(row)
+
+    def enable_trajectory_logging(self, output_dir):
+        """Initialize the trajectory logging state."""
+        self._trajectory_csv_path = os.path.join(output_dir, "trajectory_trace.csv")
+        self._trajectory_frame_counter = 0
+        self._initial_raw_coords = None
+        # Ensure directory exists
+        os.makedirs(output_dir, exist_ok=True)
+        # Clear existing file if any
+        if os.path.exists(self._trajectory_csv_path):
+            os.remove(self._trajectory_csv_path)
+
     def get_output(self):
         if self.scoring_restraint_instance:
-            return self.scoring_restraint_instance.get_output()
+            score = self.scoring_restraint_instance.unprotected_evaluate(None)
+            # Inject trajectory logging hook
+            if hasattr(self, "_trajectory_csv_path"):
+                self._log_trajectory_frame(self._trajectory_frame_counter, score)
+                self._trajectory_frame_counter += 1
+            
+            return {f"{self.type}ScoringRestraint_Score": str(score)}
         return {}

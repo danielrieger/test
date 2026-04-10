@@ -19,15 +19,15 @@ if _thesis_dir not in sys.path:
 if _project_dir not in sys.path:
     sys.path.insert(0, _project_dir)
 
-from smlm_score.src.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
-from smlm_score.src.utility.data_handling import (
+from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+from smlm_score.utility.data_handling import (
     align_npc_cluster_pca,
     compute_av,
     flexible_filter_smlm_data,
     isolate_individual_npcs,
 )
-from smlm_score.src.utility.input import read_experimental_data, read_parameters_from_json
-from smlm_score.src.utility.visualization import _DARK_BG, _TEXT_COLOR, _GRID_COLOR, _ACCENT_CYAN, _ACCENT_ORANGE, _style_axis_3d
+from smlm_score.utility.input import read_experimental_data, read_parameters_from_json
+from smlm_score.utility.visualization import _DARK_BG, _TEXT_COLOR, _GRID_COLOR, _ACCENT_CYAN, _ACCENT_ORANGE, _style_axis_3d
 
 print("\n--- NPC 3D Visualization Pipeline Starting ---", flush=True)
 print(f"Time: {datetime.now().strftime('%H:%M:%S')}", flush=True)

@@ -7,10 +7,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from smlm_score.src.imp_modeling.restraint import scoring_restraint
-from smlm_score.src.imp_modeling.restraint import imp_restraint
-from smlm_score.src.utility import plot as plot_mod
-from smlm_score.src.benchmarking import gmm_benchmarks
+from smlm_score.imp_modeling.restraint import scoring_restraint
+from smlm_score.imp_modeling.restraint import imp_restraint
+from smlm_score.utility import plot as plot_mod
+from smlm_score.benchmarking import gmm_benchmarks
 
 
 @pytest.mark.unit

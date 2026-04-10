@@ -15,8 +15,8 @@ for _p in (_workspace_dir, _project_dir):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data
-from smlm_score.src.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import flexible_filter_smlm_data
+from smlm_score.utility.input import read_experimental_data
 
 
 POINTWISE_MERGE_THRESHOLD = 5000

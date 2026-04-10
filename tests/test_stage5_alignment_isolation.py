@@ -5,7 +5,7 @@ Isolation tests for Stage 5 PCA alignment internals with mocking.
 import numpy as np
 import pytest
 
-from smlm_score.src.utility import data_handling
+from smlm_score.utility import data_handling
 
 
 @pytest.mark.unit

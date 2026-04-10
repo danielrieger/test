@@ -10,8 +10,8 @@ THESIS_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
 if THESIS_ROOT not in sys.path:
     sys.path.insert(0, THESIS_ROOT)
 
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import (
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     isolate_individual_npcs,
     align_npc_cluster_pca,

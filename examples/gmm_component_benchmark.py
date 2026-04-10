@@ -7,8 +7,8 @@ from typing import List, Dict
 from sklearn import mixture
 
 # Import project modules (Analog zu NPC_example_BD.py)
-from smlm_score.src.utility.input import read_experimental_data
-from smlm_score.src.utility.data_handling import flexible_filter_smlm_data
+from smlm_score.utility.input import read_experimental_data
+from smlm_score.utility.data_handling import flexible_filter_smlm_data
 
 
 class GMMComponentBenchmark:
