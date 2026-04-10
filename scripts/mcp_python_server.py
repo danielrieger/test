@@ -17,22 +17,31 @@ def execute_python(code: str) -> str:
     stdout = io.StringIO()
     stderr = io.StringIO()
     
-    # Pre-configure environment (e.g., PYTHONPATH)
-    # This ensures that the 'smlm_score' package is available
-    thesis_root = r"C:\Users\User\OneDrive\Desktop\Thesis"
-    if thesis_root not in sys.path:
-        sys.path.insert(0, thesis_root)
+    # 1. Configure Python Path
+    thesis_src = "/home/daniel/Thesis/smlm_score/src"
+    if thesis_src not in sys.path:
+        sys.path.insert(0, thesis_src)
         
-    # Ensure Library/bin is in PATH for DLL resolution (IMP, etc.)
-    env_root = r"C:\envs\py311"
-    lib_bin = os.path.join(env_root, "Library", "bin")
-    if lib_bin not in os.environ["PATH"]:
-        os.environ["PATH"] = f"{lib_bin};{os.environ['PATH']}"
+    # 2. Configure CUDA Environment Paths
+    # We need to explicitly point to the conda-managed CUDA libraries for Numba
+    conda_env = "/home/daniel/miniforge3/envs/smlm"
+    os.environ["CUDA_HOME"] = conda_env
+    
+    # List of paths where CUDA/NVVM libraries might live in this env
+    cuda_libs = [
+        f"{conda_env}/lib",
+        f"{conda_env}/nvvm/lib64"
+    ]
+    
+    current_ld = os.environ.get("LD_LIBRARY_PATH", "")
+    for lib in cuda_libs:
+        if lib not in current_ld:
+            current_ld = f"{lib}:{current_ld}" if current_ld else lib
+    os.environ["LD_LIBRARY_PATH"] = current_ld
 
     try:
         with redirect_stdout(stdout), redirect_stderr(stderr):
-            # Execute the code in the context of the current global dictionary
-            # For persistent state, we could use a custom dict, but here we just run it.
+            # Execute the code
             exec(code, globals())
         
         result = stdout.getvalue()
