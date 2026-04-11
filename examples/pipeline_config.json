@@ -15,8 +15,14 @@
     "filtering": {
         "type": "random",
         "filter": {
-            "x_range": [10000, 12000],
-            "y_range": [0, 5000],
+            "x_range": [
+                10000,
+                12000
+            ],
+            "y_range": [
+                0,
+                5000
+            ],
             "z_range": null
         },
         "random": {
@@ -33,7 +39,7 @@
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",
-            "number_of_frames": 2,
+            "number_of_frames": 20,
             "monte_carlo_steps": 10
         },
         "frequentist": {
