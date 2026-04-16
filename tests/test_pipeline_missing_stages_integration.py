@@ -112,9 +112,10 @@ def test_stage7_sampling_integration_bayesian_sampler_flow(monkeypatch):
         def __init__(self, model):
             self.model = model
 
-        def create_rigid_body(self, particles, name):
+        def create_rigid_body(self, particles, name, **kwargs):
             self.particles = particles
             self.name = name
+            self.kwargs = kwargs
 
         def get_movers(self):
             return ["mover"]
@@ -134,7 +135,6 @@ def test_stage7_sampling_integration_bayesian_sampler_flow(monkeypatch):
         @staticmethod
         def get_is_setup(_p):
             return True
-
         @staticmethod
         def setup_particle(_p, _m):
             return None
@@ -142,15 +142,68 @@ def test_stage7_sampling_integration_bayesian_sampler_flow(monkeypatch):
     class FakeChainDecorator:
         def __init__(self, p):
             self.p = p
-
         @staticmethod
         def get_is_setup(_p):
             return True
-
         def set_id(self, _new):
             return None
 
+    class FakeXYZ:
+        @staticmethod
+        def get_is_setup(_p):
+            return True
+        def __init__(self, _p):
+            pass
+        def get_coordinates(self):
+            return [0, 0, 0]
+        def get_x(self): return 0
+        def get_y(self): return 0
+        def get_z(self): return 0
+
+    class FakeXYZR:
+        @staticmethod
+        def get_is_setup(_p):
+            return False
+        @staticmethod
+        def setup_particle(_p, _r):
+            return None
+
+    class FakeRMF:
+        @staticmethod
+        def create_rmf_file(_path):
+            return FakeRMFFile()
+        @staticmethod
+        def ParticleFactory(_rmf):
+            return FakeFactory()
+        @staticmethod
+        def ColoredFactory(_rmf):
+            return FakeFactory()
+        class Vector3:
+            def __init__(self, x, y, z):
+                pass
+        FRAME = "frame"
+        REPRESENTATION = "repr"
+
+    class FakeRMFFile:
+        def set_description(self, _d): pass
+        def get_root_node(self): return FakeNode()
+        def add_frame(self, _n, _t): pass
+
+    class FakeNode:
+        def add_child(self, _n, _t): return FakeNode()
+        def get_name(self): return "leaf"
+
+    class FakeFactory:
+        def get(self, _node): return FakeParticle()
+
+    class FakeParticle:
+        def set_mass(self, _m): pass
+        def set_radius(self, _r): pass
+        def set_rgb_color(self, _c): pass
+        def set_coordinates(self, _c): pass
+
     fake_imp = types.SimpleNamespace(
+        Model=object,
         pmi=types.SimpleNamespace(
             dof=types.SimpleNamespace(DegreesOfFreedom=FakeDOF),
             macros=types.SimpleNamespace(ReplicaExchange=FakeReplicaExchange),
@@ -160,10 +213,16 @@ def test_stage7_sampling_integration_bayesian_sampler_flow(monkeypatch):
             get_by_type=lambda _h, _t: [object()],
             CHAIN_TYPE=1,
             Chain=FakeChainDecorator,
+            get_leaves=lambda _h: [FakeNode()],
+        ),
+        core=types.SimpleNamespace(
+            XYZ=FakeXYZ,
+            XYZR=FakeXYZR,
         ),
     )
 
     monkeypatch.setattr(mcmc_sampler, "IMP", fake_imp)
+    monkeypatch.setattr(mcmc_sampler, "RMF", FakeRMF)
 
     class FakeAV:
         def __init__(self):
