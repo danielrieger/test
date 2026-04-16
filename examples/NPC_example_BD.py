@@ -14,6 +14,7 @@ from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     compute_av,
     isolate_individual_npcs,
+    isolate_npcs_from_eman2_boxes,
     align_npc_cluster_pca,
     get_held_out_complement
 )
@@ -40,6 +41,7 @@ av_parameters_path = config["paths"]["av_parameters"]
 TEST_SCORING_TYPES = config["execution"]["test_scoring_types"]
 TARGET_CLUSTER_ID = config["execution"]["target_cluster_id"]
 
+CLUSTERING_METHOD = config["clustering"].get("method", "hdbscan")
 PERFORM_GEOMETRIC_MERGING = config["clustering"]["perform_geometric_merging"]
 MIN_CLUSTER_SIZE = config["clustering"]["min_cluster_size"]
 MIN_NPC_POINTS = config["clustering"]["min_npc_points"]
@@ -49,6 +51,9 @@ RUN_BAYESIAN_SAMPLING = config["optimization"]["bayesian"]["run_sampling"]
 SAMPLING_SCORING_TYPE = config["optimization"]["bayesian"]["scoring_type"]
 BAYESIAN_FRAMES = config["optimization"]["bayesian"]["number_of_frames"]
 BAYESIAN_STEPS = config["optimization"]["bayesian"]["monte_carlo_steps"]
+BAYESIAN_SCORE_WEIGHT = config["optimization"]["bayesian"].get("score_weight", 1.0)
+BAYESIAN_MAX_RB_TRANS = config["optimization"]["bayesian"].get("max_rb_trans", 4.0)
+BAYESIAN_MAX_RB_ROT = config["optimization"]["bayesian"].get("max_rb_rot", 0.04)
 
 FREQUENTIST_SCORING_TYPE = config["optimization"]["frequentist"]["scoring_type"]
 FREQUENTIST_MAX_STEPS = config["optimization"]["frequentist"]["max_cg_steps"]
@@ -74,9 +79,11 @@ if OPTIMIZATION_MODE == "brownian" and BROWNIAN_SCORING_TYPE == "GMM":
 print("--- SMLM-IMP Modeling Pipeline ---")
 print(f"Scoring types to test: {TEST_SCORING_TYPES}")
 print(f"Optimization mode:     {OPTIMIZATION_MODE}")
+print(f"Clustering method:     {CLUSTERING_METHOD}")
 
 # --- 2. Gather and Process Data ---
 parameters = read_parameters_from_json(av_parameters_path)
+parameters["downsample_residues_per_bead"] = config["paths"].get("downsample_residues_per_bead", None)
 raw_smlm_data_df = read_experimental_data(smlm_data_path)
 if raw_smlm_data_df is None:
     print("Error: Failed to load SMLM data. Exiting.")
@@ -114,14 +121,23 @@ model_coords_nm = np.array(
 model_centered_baseline = model_coords_nm - model_coords_nm.mean(axis=0)
 
 # --- 3. Iterative Cluster Analysis ---
-print("\n=== STARTING ITERATIVE CLUSTER ANALYSIS ===")
-npc_results = isolate_individual_npcs(
-    smlm_coordinates_for_tree,
-    min_cluster_size=MIN_CLUSTER_SIZE,
-    min_npc_points=MIN_NPC_POINTS,
-    perform_geometric_merging=PERFORM_GEOMETRIC_MERGING,
-    debug=True,
-)
+print(f"\n=== STARTING ITERATIVE CLUSTER ANALYSIS ({CLUSTERING_METHOD}) ===")
+if CLUSTERING_METHOD == "eman2":
+    npc_results = isolate_npcs_from_eman2_boxes(
+        smlm_coordinates_for_tree,
+        boxes_path=os.path.abspath(config["clustering"]["eman2_boxes"]),
+        pixel_map_path=os.path.abspath(config["clustering"]["pixel_map"]),
+        min_npc_points=MIN_NPC_POINTS,
+        debug=True,
+    )
+else:
+    npc_results = isolate_individual_npcs(
+        smlm_coordinates_for_tree,
+        min_cluster_size=MIN_CLUSTER_SIZE,
+        min_npc_points=MIN_NPC_POINTS,
+        perform_geometric_merging=PERFORM_GEOMETRIC_MERGING,
+        debug=True,
+    )
 cluster_labels = npc_results['labels']
 cluster_info = npc_results['all_cluster_info']
 valid_clusters = npc_results['npc_info']
@@ -134,12 +150,14 @@ if TARGET_CLUSTER_ID is None and valid_clusters:
 else:
     target_cluster_data = next((c for c in valid_clusters if c['cluster_id'] == TARGET_CLUSTER_ID), None)
 
+# --- 3. Evaluate Clusters ---
 clusters_to_evaluate = []
 if target_cluster_data:
     clusters_to_evaluate.append(target_cluster_data)
 clusters_to_evaluate.extend(noise_cluster_list[:3])
 
 cluster_scores = {}
+already_optimized = False
 
 for current_cluster in clusters_to_evaluate:
     cluster_idx = current_cluster['cluster_id']
@@ -164,6 +182,9 @@ for current_cluster in clusters_to_evaluate:
     model_aligned = np.dot(model_centered, rotation_matrix.T)
     
     for SCORING_TYPE in TEST_SCORING_TYPES:
+        if len(aligned_cluster_points) == 0:
+            print(f"Skipping Cluster {cluster_idx}: No points after alignment.")
+            continue
         sr_wrapper = None
         if SCORING_TYPE == "Tree":
             sr_wrapper = ScoringRestraintWrapper(
@@ -196,14 +217,18 @@ for current_cluster in clusters_to_evaluate:
             cluster_scores[cluster_idx][SCORING_TYPE] = score
             
             # --- Optimization Trigger ---
-            should_optimize = (cluster_idx == TARGET_CLUSTER_ID and cluster_type == "Valid")
-            if should_optimize:
+            should_optimize = (cluster_idx == TARGET_CLUSTER_ID or (TARGET_CLUSTER_ID is None and cluster_type == "Valid"))
+            if should_optimize and not already_optimized:
                 if OPTIMIZATION_MODE == "bayesian" and SCORING_TYPE == SAMPLING_SCORING_TYPE:
-                    run_bayesian_sampling(m, pdb_hierarchy, avs, sr_wrapper, f"bayesian_cluster_{cluster_idx}", BAYESIAN_FRAMES, BAYESIAN_STEPS)
+                    print(f"  [Bayesian] Triggering optimization for cluster {cluster_idx}...")
+                    already_optimized = True
+                    effective_weight = 1.0 / n_points if BAYESIAN_SCORE_WEIGHT == "auto" else float(BAYESIAN_SCORE_WEIGHT)
+                    run_bayesian_sampling(m, pdb_hierarchy, avs, sr_wrapper, f"bayesian_cluster_{cluster_idx}", BAYESIAN_FRAMES, BAYESIAN_STEPS, effective_weight, BAYESIAN_MAX_RB_TRANS, BAYESIAN_MAX_RB_ROT)
                 elif OPTIMIZATION_MODE == "frequentist" and SCORING_TYPE == FREQUENTIST_SCORING_TYPE:
                     if SCORING_TYPE == "GMM":
                         print("  [Frequentist] Skipping optimization: GMM scoring is not supported for CG.")
                     else:
+                        already_optimized = True
                         run_frequentist_optimization(m, pdb_hierarchy, avs, sr_wrapper, f"frequentist_cluster_{cluster_idx}", FREQUENTIST_MAX_STEPS)
                 elif OPTIMIZATION_MODE == "brownian" and SCORING_TYPE == BROWNIAN_SCORING_TYPE:
                     if SCORING_TYPE == "GMM":

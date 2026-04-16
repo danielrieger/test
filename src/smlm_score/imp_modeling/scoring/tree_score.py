@@ -4,6 +4,7 @@ import IMP
 import IMP.bff
 import IMP.core
 import numpy as np
+from numba import jit
 from sklearn.neighbors import KDTree
 
 TREE_EXACT_MODEL_COUNT_THRESHOLD = 64
@@ -123,6 +124,99 @@ def _prepare_distance_terms(dataxyz, var, sigmaav):
     return log_prefactors, inv_sigmas
 
 
+@jit(nopython=True, fastmath=True)
+def _compute_tree_score_numba(
+    dataxyz, inv_sigmas, log_prefactors, modelxyzs, candidate_starts, candidate_indices
+):
+    """
+    Numba-accelerated inner loop for tree scoring.
+    """
+    n_data = dataxyz.shape[0]
+    scoretotal = 0.0
+
+    for i in range(n_data):
+        x_d = dataxyz[i]
+        inv_sigma = inv_sigmas[i]
+        log_prefactor = log_prefactors[i]
+
+        start = candidate_starts[i]
+        end = candidate_starts[i + 1]
+        n_cand = end - start
+
+        # If zero candidates were found (safety fallback in build_model_candidates)
+        # we assume this shouldn't happen here as build_model_candidates handles it,
+        # but the kernel handles a specific candidate range.
+        if n_cand == 0:
+            continue
+
+        log_probs = np.zeros(n_cand, dtype=np.float64)
+        for j in range(n_cand):
+            model_idx = candidate_indices[start + j]
+            diff = modelxyzs[model_idx] - x_d
+            exponent = -0.5 * np.dot(diff.T, np.dot(inv_sigma, diff))
+            log_probs[j] = log_prefactor + exponent
+
+        max_log_prob = np.max(log_probs)
+        sum_exp = 0.0
+        for j in range(n_cand):
+            sum_exp += np.exp(log_probs[j] - max_log_prob)
+
+        scoretotal += max_log_prob + np.log(sum_exp)
+
+    return scoretotal
+
+
+@jit(nopython=True, fastmath=True)
+def _compute_tree_score_and_grad_numba(
+    dataxyz, inv_sigmas, log_prefactors, modelxyzs, candidate_starts, candidate_indices
+):
+    """
+    Numba-accelerated inner loop for tree scoring with gradients.
+    """
+    n_data = dataxyz.shape[0]
+    n_model = modelxyzs.shape[0]
+    scoretotal = 0.0
+    grad = np.zeros((n_model, 3), dtype=np.float64)
+
+    for i in range(n_data):
+        x_d = dataxyz[i]
+        inv_sigma = inv_sigmas[i]
+        log_prefactor = log_prefactors[i]
+
+        start = candidate_starts[i]
+        end = candidate_starts[i + 1]
+        n_cand = end - start
+
+        if n_cand == 0:
+            continue
+
+        log_probs = np.zeros(n_cand, dtype=np.float64)
+        forces = np.zeros((n_cand, 3), dtype=np.float64)
+
+        for j in range(n_cand):
+            model_idx = candidate_indices[start + j]
+            diff = modelxyzs[model_idx] - x_d
+            # inv_sigma @ diff for numba
+            force = -np.dot(inv_sigma, diff)
+            exponent = 0.5 * np.dot(diff.T, force)
+            log_probs[j] = log_prefactor + exponent
+            forces[j] = force
+
+        max_log_prob = np.max(log_probs)
+        sum_exp = 0.0
+        for j in range(n_cand):
+            sum_exp += np.exp(log_probs[j] - max_log_prob)
+
+        scoretotal += max_log_prob + np.log(sum_exp)
+
+        for j in range(n_cand):
+            model_idx = candidate_indices[start + j]
+            responsibility = np.exp(log_probs[j] - max_log_prob) / sum_exp
+            grad[model_idx] += responsibility * forces[j]
+
+    return scoretotal, grad
+
+
 def computescoretree(
     tree: KDTree,
     modelavs: typing.List[IMP.bff.AV],
@@ -176,24 +270,27 @@ def computescoretree(
     )
     all_model_indices = np.arange(len(modelxyzs_query), dtype=np.int64)
 
-    scoretotal = 0.0
-    for data_idx in range(len(dataxyz)):
-        candidate_models = model_candidates_per_data[data_idx]
-        if len(candidate_models) == 0:
-            candidate_models = all_model_indices
+    # Convert list-of-lists to flat CSR representation for Numba compatibility
+    flat_indices = []
+    starts = [0]
+    for m_list in model_candidates_per_data:
+        if len(m_list) == 0:
+            flat_indices.extend(all_model_indices.tolist())
+        else:
+            flat_indices.extend(m_list)
+        starts.append(len(flat_indices))
 
-        x_d = dataxyz[data_idx]
-        inv_sigma = inv_sigmas[data_idx]
-        log_prefactor = log_prefactors[data_idx]
+    candidate_indices = np.array(flat_indices, dtype=np.int64)
+    candidate_starts = np.array(starts, dtype=np.int64)
 
-        log_probs = np.zeros(len(candidate_models), dtype=np.float64)
-        for local_idx, model_idx in enumerate(candidate_models):
-            diff = modelxyzs_query[int(model_idx)] - x_d
-            exponent = -0.5 * np.dot(diff.T, np.dot(inv_sigma, diff))
-            log_probs[local_idx] = log_prefactor + exponent
-
-        max_log_prob = np.max(log_probs)
-        scoretotal += max_log_prob + np.log(np.sum(np.exp(log_probs - max_log_prob)))
+    scoretotal = _compute_tree_score_numba(
+        dataxyz,
+        inv_sigmas,
+        log_prefactors,
+        modelxyzs_query,
+        candidate_starts,
+        candidate_indices,
+    )
 
     return float(scoretotal)
 
@@ -238,37 +335,30 @@ def computescoretree_with_grad(
     )
     all_model_indices = np.arange(len(modelxyzs_query), dtype=np.int64)
 
-    scoretotal = 0.0
+    # Convert list-of-lists to flat CSR representation for Numba compatibility
+    flat_indices = []
+    starts = [0]
+    for m_list in model_candidates_per_data:
+        if len(m_list) == 0:
+            flat_indices.extend(all_model_indices.tolist())
+        else:
+            flat_indices.extend(m_list)
+        starts.append(len(flat_indices))
+
+    candidate_indices = np.array(flat_indices, dtype=np.int64)
+    candidate_starts = np.array(starts, dtype=np.int64)
+
+    scoretotal, grad_reduced = _compute_tree_score_and_grad_numba(
+        dataxyz,
+        inv_sigmas,
+        log_prefactors,
+        modelxyzs_query,
+        candidate_starts,
+        candidate_indices,
+    )
+
+    # Map reduced gradient back to full 3D model coordinates
     grad = np.zeros((len(modelxyzs), 3), dtype=np.float64)
-
-    for data_idx in range(len(dataxyz)):
-        candidate_models = model_candidates_per_data[data_idx]
-        if len(candidate_models) == 0:
-            candidate_models = all_model_indices
-
-        x_d = dataxyz[data_idx]
-        inv_sigma = inv_sigmas[data_idx]
-        log_prefactor = log_prefactors[data_idx]
-
-        n_candidates = len(candidate_models)
-        log_probs = np.zeros(n_candidates, dtype=np.float64)
-        forces = np.zeros((n_candidates, ndim), dtype=np.float64)
-
-        for local_idx, model_idx in enumerate(candidate_models):
-            model_idx = int(model_idx)
-            diff = modelxyzs_query[model_idx] - x_d
-            exponent = -0.5 * np.dot(diff.T, np.dot(inv_sigma, diff))
-            log_probs[local_idx] = log_prefactor + exponent
-            forces[local_idx] = -np.dot(inv_sigma, diff)
-
-        max_log_prob = np.max(log_probs)
-        exp_shifted = np.exp(log_probs - max_log_prob)
-        sum_exp = np.sum(exp_shifted)
-        scoretotal += max_log_prob + np.log(sum_exp)
-
-        responsibilities = exp_shifted / sum_exp
-        for local_idx, model_idx in enumerate(candidate_models):
-            model_idx = int(model_idx)
-            grad[model_idx, :ndim] += responsibilities[local_idx] * forces[local_idx]
+    grad[:, :ndim] = grad_reduced
 
     return float(scoretotal), grad

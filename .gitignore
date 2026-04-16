@@ -39,3 +39,8 @@ review_notes.md
 
 # Runtime logs
 *.log
+.eman2log.txt
+.eman2settings.json
+nnet_*.hdf
+trainout_*.hdf
+picked_particles/

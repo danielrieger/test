@@ -638,6 +638,11 @@ def compute_av(pdb_datapath, parameter):
         av_decorator.resample()
         avs_list.append(av_decorator)
 
+    downsample_factor = parameter.get('downsample_residues_per_bead', None)
+    if downsample_factor is not None and downsample_factor > 0:
+        print(f"Downsampling hierarchy to {downsample_factor} AAs per bead...")
+        hier = IMP.atom.create_simplified_along_backbone(hier, downsample_factor, False)
+
     return avs_list, m, hier
 
 
@@ -658,3 +663,101 @@ def scalar_variances_to_covariances(scalar_vars):
 
 
 
+def isolate_npcs_from_eman2_boxes(
+    smlm_data: np.ndarray,
+    boxes_path: str,
+    pixel_map_path: str,
+    min_npc_points: int = 50,
+    debug: bool = False,
+):
+    """
+    Isolate individual NPCs from SMLM data using coordinates from EMAN2 pick results.
+    """
+    import json
+    import os
+
+    if not os.path.exists(boxes_path):
+        raise FileNotFoundError(f"EMAN2 box file not found: {boxes_path}")
+    if not os.path.exists(pixel_map_path):
+        raise FileNotFoundError(f"Pixel map file not found: {pixel_map_path}")
+
+    # Load Box Data
+    with open(boxes_path, 'r') as f:
+        info_data = json.load(f)
+    
+    # EMAN2 format handling (same logic as reverse translation script)
+    boxes = info_data.get('boxes', [])
+    if not boxes and isinstance(info_data, list):
+        boxes = info_data
+    elif not boxes:
+        for k in info_data.keys():
+            if 'boxes' in k.lower():
+                boxes = info_data[k]
+                break
+    
+    if not boxes:
+        print("Warning: No boxes found in EMAN2 JSON.")
+        return {
+            'labels': np.full(len(smlm_data), -1, dtype=int),
+            'n_npcs': 0,
+            'npc_info': [],
+            'probabilities': np.zeros(len(smlm_data), dtype=float),
+            'all_cluster_info': [],
+        }
+
+    # Load Pixel Map
+    with open(pixel_map_path, 'r') as f:
+        pixel_map = json.load(f)
+    
+    pixel_size_nm = pixel_map['pixel_size_nm']
+    
+    # Prepare results
+    labels = np.full(len(smlm_data), -1, dtype=int)
+    npc_info = []
+    all_cluster_info = []
+
+    # EMAN2 usually stores a global box size in the project.json or top level of info
+    project_box_size = info_data.get('global.boxsize', 32)
+
+    for i, box in enumerate(boxes):
+        px_x, px_y = box[0], box[1]
+        box_size_px = project_box_size
+        
+        half_size_nm = (box_size_px / 2.0) * pixel_size_nm
+        x_min, x_max = (px_x * pixel_size_nm) - half_size_nm, (px_x * pixel_size_nm) + half_size_nm
+        y_min, y_max = (px_y * pixel_size_nm) - half_size_nm, (px_y * pixel_size_nm) + half_size_nm
+        
+        # Filter points (faster vectorization)
+        mask = (smlm_data[:, 0] >= x_min) & (smlm_data[:, 0] <= x_max) & \
+               (smlm_data[:, 1] >= y_min) & (smlm_data[:, 1] <= y_max)
+        
+        labels[mask] = i
+        n_pts = int(np.sum(mask))
+        pts = smlm_data[mask]
+        
+        if n_pts > 0:
+            centroid = pts.mean(axis=0)
+            bbox_min, bbox_max = pts.min(axis=0), pts.max(axis=0)
+            
+            info = {
+                'cluster_id': i,
+                'n_points': n_pts,
+                'centroid': centroid,
+                'bbox_min': bbox_min,
+                'bbox_max': bbox_max,
+                'bbox_size': bbox_max - bbox_min,
+            }
+            all_cluster_info.append(info)
+            if n_pts >= min_npc_points:
+                npc_info.append(info)
+
+    if debug:
+        print(f"  EMAN2 Picking: Found {len(boxes)} boxes. {len(npc_info)} clusters match min_points filter.")
+
+    return {
+        'labels': labels,
+        'n_npcs': len(npc_info),
+        'npc_info': npc_info,
+        'probabilities': np.ones(len(smlm_data), dtype=float), # Confidence is 1 for assigned points
+        'all_cluster_info': all_cluster_info,
+    }

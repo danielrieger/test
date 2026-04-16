@@ -51,9 +51,14 @@ def benchmark_scoring_methods():
     
     # Warmup Numba (crucial for accurate timings)
     dummy_data = generate_synthetic_data(10)
-    _compute_distance_score_cpu(dummy_data, np.array([np.eye(3)]*10), np.ones(10), model, 8.0)
+    dummy_cov = np.array([np.eye(3)]*10)
+    dummy_weights = np.ones(10)
+    _compute_distance_score_cpu(dummy_data, dummy_cov, dummy_weights, model, 8.0)
     _compute_nb_gmm_cpu(model, np.array([[0,0,0]]), np.array([np.eye(3)]), np.array([1.0]))
-    computescoretree(KDTree(dummy_data), None, dummy_data, np.ones(10), model_coords_override=model)
+    # Warmup Tree (both score and grad paths)
+    computescoretree(KDTree(dummy_data), None, dummy_data, dummy_weights, model_coords_override=model)
+    from smlm_score.imp_modeling.scoring.tree_score import computescoretree_with_grad
+    computescoretree_with_grad(KDTree(dummy_data), None, dummy_data, dummy_weights, model_coords_override=model)
     
     print("=== thesis Benchmarking ===\n")
     

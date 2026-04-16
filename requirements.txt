@@ -11,5 +11,11 @@ plotly>=5.24.0
 tqdm>=4.66.0
 pydantic>=2.9.0
 
+# Clustering and Analysis
+hdbscan>=0.8.37
+
+# Visualization
+pyvista>=0.44.0
+
 # Development
 pytest>=9.0.0

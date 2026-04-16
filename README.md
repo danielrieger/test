@@ -13,7 +13,7 @@ Bayesian scoring of Single-Molecule Localization Microscopy (SMLM) data against 
 - **Three optimization modes**:
   - Brownian Dynamics (geometric relaxation)
   - Conjugate Gradients (frequentist MLE)
-  - Replica Exchange Monte Carlo (Bayesian posterior sampling)
+  - Replica Exchange Monte Carlo (Bayesian posterior sampling with animated RMF trajectories)
 - **HDBSCAN clustering**: Automated NPC isolation from dense SMLM fields
 - **PCA alignment**: Model-data registration
 - **Validation framework**: Separation tests and held-out cross-validation
@@ -110,7 +110,6 @@ The validation module implements two tests:
 ## License
 
 TBD
-), which is the expected behavior.
 
 ## Testing
 
@@ -119,10 +118,6 @@ pytest tests/
 ```
 
 Expected result: **92 passed, 5 skipped** (skipped tests require CUDA).
-
-## License
-
-TBD
 
 ## Citation
 
