@@ -333,6 +333,88 @@ def test_stage8_validation_distance_uses_same_cluster_normalization_as_tree():
 
 
 @pytest.mark.unit
+def test_stage8_validation_scramble_preserves_shape():
+    data = np.random.rand(100, 3)
+    scrambled = validation_mod._scramble_data(data)
+    assert scrambled.shape == data.shape
+    assert not np.array_equal(scrambled, data)
+    # Check that each column is just a permutation
+    for i in range(3):
+        assert set(scrambled[:, i]) == set(data[:, i])
+
+
+@pytest.mark.unit
+def test_stage8_validation_angular_split_partitions():
+    # Create a simple 2D ring of points
+    t = np.linspace(0, 2 * np.pi, 20)
+    pts = np.vstack([np.cos(t), np.sin(t), np.zeros(20)]).T
+    
+    thetas = np.arctan2(pts[:, 1], pts[:, 0])
+    median_t = np.median(thetas)
+    
+    mask_a = thetas <= median_t
+    mask_b = ~mask_a
+    
+    assert np.sum(mask_a) >= 9
+    assert np.sum(mask_b) >= 9
+    assert np.sum(mask_a) + np.sum(mask_b) == 20
+
+
+@pytest.mark.unit
+def test_stage8_validation_cross_val_flow_mock(monkeypatch):
+    eval_count = 0
+    class FakeWrapper:
+        def __init__(self, *args, **kwargs):
+            self.dataset = kwargs.get('dataxyz')
+        def evaluate(self, pts_override=None):
+            nonlocal eval_count
+            eval_count += 1
+            if not getattr(self, "return_bad", False):
+                return -10.0
+            # Return varied scores for null cases (e.g., -45, -55)
+            # null evaluations are the 2nd and 4th overall eval calls
+            return -45.0 if eval_count == 2 else -55.0
+
+    # We need to mock the wrapper imported inside the function
+    import smlm_score.imp_modeling.restraint.scoring_restraint as sr_mod
+    monkeypatch.setattr(sr_mod, "ScoringRestraintWrapper", FakeWrapper)
+    
+    # We also need to mock test_gmm_components for GMM
+    import smlm_score.imp_modeling.scoring.gmm_score as gmm_mod
+    class FakeGMM:
+        n_components = 1
+    monkeypatch.setattr(gmm_mod, "test_gmm_components", 
+                       lambda x: (None, FakeGMM(), np.zeros((1,3)), np.zeros((1,3,3)), np.zeros(1)))
+
+    # Create dummy ring data
+    t = np.linspace(0, 2 * np.pi, 50)
+    pts = np.vstack([np.cos(t), np.sin(t), np.zeros(50)]).T
+    
+    # Run CV Tree
+    # We want sr_null to return a worse score.
+    # I'll use a hack to make the 2nd and 4th instantiation "bad"
+    inst_count = 0
+    original_init = FakeWrapper.__init__
+    def sneaky_init(self, *args, **kwargs):
+        nonlocal inst_count
+        original_init(self, *args, **kwargs)
+        if inst_count % 2 == 1: # 2nd and 4th calls are null_pts
+            self.return_bad = True
+        inst_count += 1
+    monkeypatch.setattr(FakeWrapper, "__init__", sneaky_init)
+
+    res = validation_mod.validate_cross_validated_npc(
+        cluster_points=pts,
+        model_coords=np.zeros((10, 3)),
+        scoring_type="Tree",
+        model=object(),
+        avs=[object()]
+    )
+    
+    assert res.passed is True
+    assert "Real ring structure outscores scrambled null" in res.details
+    assert res.metrics["separation_sigma"] > 0
+@pytest.mark.unit
 @pytest.mark.parametrize("percent", [10, 25, 50, 100])
 def test_flexible_filter_percentage_exact_counts(percent):
     """Verify that percentage filtering returns the exact expected point count."""

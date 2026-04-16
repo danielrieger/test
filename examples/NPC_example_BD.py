@@ -157,6 +157,7 @@ if target_cluster_data:
 clusters_to_evaluate.extend(noise_cluster_list[:3])
 
 cluster_scores = {}
+cross_val_data = None
 already_optimized = False
 
 for current_cluster in clusters_to_evaluate:
@@ -180,6 +181,14 @@ for current_cluster in clusters_to_evaluate:
     model_coords_nm = np.array([np.array(IMP.core.XYZ(av).get_coordinates()) * 0.1 for av in avs])
     model_centered = model_coords_nm - model_coords_nm.mean(axis=0)
     model_aligned = np.dot(model_centered, rotation_matrix.T)
+    
+    if cluster_idx == TARGET_CLUSTER_ID:
+        cross_val_data = {
+            'cluster_points': aligned_cluster_points,
+            'model_coords': model_aligned,
+            'model': m,
+            'avs': avs
+        }
     
     for SCORING_TYPE in TEST_SCORING_TYPES:
         if len(aligned_cluster_points) == 0:
@@ -294,8 +303,6 @@ if len(held_out_xyz) > 0:
             except Exception as exc:
                 print(f"Held-out validation chunk failed for {ST}: {exc}")
         
-        target_s = cluster_scores.get(TARGET_CLUSTER_ID, {}).get(ST)
-        target_n_points = cluster_scores.get(TARGET_CLUSTER_ID, {}).get('n_points')
         if target_s is not None and chunk_scores:
             held_out_results[ST] = {
                 'valid_score': target_s,
@@ -304,4 +311,11 @@ if len(held_out_xyz) > 0:
                 'held_out_n_points': chunk_n_points,
             }
 
-run_full_validation(cluster_scores, held_out_results if held_out_results else None, TEST_SCORING_TYPES)
+# Final Summary Validation (Strategy B: Structural Cross-Validation)
+final_scoring_types = [t for t in TEST_SCORING_TYPES if t != "Distance"]
+run_full_validation(
+    cluster_scores=cluster_scores,
+    held_out_results=held_out_results if held_out_results else None,
+    scoring_types=final_scoring_types,
+    cross_val_data=cross_val_data
+)

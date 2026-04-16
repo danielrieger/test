@@ -18,8 +18,8 @@ if (-not (Test-Path $PythonExe)) {
     exit 1
 }
 
-# Add Thesis directory to PYTHONPATH so python can find 'smlm_score' package
-$env:PYTHONPATH = "$ThesisDir;$env:PYTHONPATH"
+# Add src directory to PYTHONPATH so python can find 'smlm_score' package
+$env:PYTHONPATH = "$(Join-Path $ProjectRoot "src");$env:PYTHONPATH"
 $env:PATH = "$EnvRoot;$EnvRoot\Scripts;$EnvRoot\Library\bin;$env:PATH"
 $env:VIRTUAL_ENV = $EnvRoot
 $env:CONDA_PREFIX = $EnvRoot

@@ -73,14 +73,6 @@ def _normalize_score(score: float, n_points, scoring_type: str = "") -> float:
     return score
 
 
-# ---------------------------------------------------------------------------
-# Scoring types where less negative (closer to zero) = BETTER model fit.
-# Tree, GMM, and Distance scoring all evaluate log-likelihood or pseudo-energy
-# where a tightly matching structure yields a less negative penalty compared to
-# random noise.
-# ---------------------------------------------------------------------------
-
-
 def validate_scoring_separation(
     cluster_scores: Dict[int, Dict[str, float]],
     scoring_types: Optional[List[str]] = None
@@ -133,7 +125,7 @@ def validate_scoring_separation(
         # All current validation comparisons use "less negative = better fit"
         # after score-type-appropriate normalization.
         separation = (mean_valid - mean_noise) / std_noise if std_noise > 0 else float('inf')
-        passed = mean_valid > mean_noise
+        passed = bool(mean_valid > mean_noise)
         direction_note = "less negative = better fit"
 
         results.append(ValidationResult(
@@ -215,10 +207,10 @@ def validate_with_held_out_data(
                     else abs(mean_held_out) * 0.1)
     
     # Validation PASS: valid NPC score should be less negative (higher) than noise.
-    separation = ((valid_norm - mean_held_out) / std_held_out
-                  if std_held_out > 0 else float('inf'))
+    separation = ((valid_norm - mean_held_out) / std_norm
+                  if (std_norm := std_held_out) > 0 else float('inf'))
 
-    passed = valid_norm > mean_held_out
+    passed = bool(valid_norm > mean_held_out)
 
     return ValidationResult(
         test_name=f"HeldOut_{scoring_type}",
@@ -245,16 +237,152 @@ def validate_with_held_out_data(
     )
 
 
+def _scramble_data(data: np.ndarray) -> np.ndarray:
+    """Destroy structural pattern while preserving density and point count.
+    
+    Independently permutes each coordinate column (x, y, z).
+    """
+    scrambled = data.copy()
+    for i in range(data.shape[1]):
+        scrambled[:, i] = np.random.permutation(scrambled[:, i])
+    return scrambled
+
+
+def validate_cross_validated_npc(
+    cluster_points: np.ndarray,
+    model_coords: np.ndarray,
+    scoring_type: str,
+    model: Any,
+    avs: List[Any],
+    n_splits: int = 2,
+    debug: bool = False
+) -> ValidationResult:
+    """
+    Validates scoring sensitivity to ring geometry using angular cross-validation.
+    
+    1. Splits NPC into angular halves (semicircles in PCA frame).
+    2. 'Trains' on half A, 'Tests' on half B (and vice-versa).
+    3. Compares CV score against a structure-scrambled null control.
+    """
+    from sklearn.neighbors import KDTree as SKKDTree
+    from smlm_score.imp_modeling.restraint.scoring_restraint import ScoringRestraintWrapper
+    from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
+
+    if len(cluster_points) < 40:
+        return ValidationResult(
+            test_name=f"CrossVal_{scoring_type}",
+            passed=False,
+            details=f"Insufficient points for cross-validation ({len(cluster_points)})"
+        )
+
+    # --- 1. Angular Split (Azimuthal) ---
+    # Points are assumed to be PCA-aligned (centered, xyplane)
+    thetas = np.arctan2(cluster_points[:, 1], cluster_points[:, 0])
+    median_theta = np.median(thetas)
+    
+    mask_a = thetas <= median_theta
+    mask_b = ~mask_a
+    
+    points_a = cluster_points[mask_a]
+    points_b = cluster_points[mask_b]
+
+    # --- 2. Cross-Validation Loop ---
+    cv_scores = []
+    scrambled_scores = []
+    
+    # We validate each half independently
+    test_halves = [points_a, points_b]
+    
+    for real_pts in test_halves:
+        if len(real_pts) < 10:
+            continue
+            
+        # 2a. Score against real structure
+        sr_real = None
+        if scoring_type == "Tree":
+            sr_real = ScoringRestraintWrapper(
+                model, avs, kdtree_obj=SKKDTree(real_pts),
+                dataxyz=real_pts, var=None,
+                searchradius=50.0, model_coords_override=model_coords,
+                type=scoring_type
+            )
+        elif scoring_type == "GMM":
+            _, gmm_obj, gmm_mean, gmm_cov, gmm_w = test_gmm_components(real_pts)
+            sr_real = ScoringRestraintWrapper(
+                model, avs, gmm_sel_components=gmm_obj.n_components,
+                gmm_sel_mean=gmm_mean, gmm_sel_cov=gmm_cov,
+                gmm_sel_weight=gmm_w, model_coords_override=model_coords,
+                type=scoring_type
+            )
+        
+        if sr_real:
+            score_real = _normalize_score(sr_real.evaluate(), len(real_pts), scoring_type)
+            cv_scores.append(score_real)
+            
+        # 2b. Score against scrambled null (same density, no geometry)
+        null_pts = _scramble_data(real_pts)
+        sr_null = None
+        if scoring_type == "Tree":
+            sr_null = ScoringRestraintWrapper(
+                model, avs, kdtree_obj=SKKDTree(null_pts),
+                dataxyz=null_pts, var=None,
+                searchradius=50.0, model_coords_override=model_coords,
+                type=scoring_type
+            )
+        elif scoring_type == "GMM":
+            _, gmm_obj, gmm_mean, gmm_cov, gmm_w = test_gmm_components(null_pts)
+            sr_null = ScoringRestraintWrapper(
+                model, avs, gmm_sel_components=gmm_obj.n_components,
+                gmm_sel_mean=gmm_mean, gmm_sel_cov=gmm_cov,
+                gmm_sel_weight=gmm_w, model_coords_override=model_coords,
+                type=scoring_type
+            )
+            
+        if sr_null:
+            score_null = _normalize_score(sr_null.evaluate(), len(real_pts), scoring_type)
+            scrambled_scores.append(score_null)
+
+    if not cv_scores:
+        return ValidationResult(test_name=f"CrossVal_{scoring_type}", passed=False, details="CV internal failure")
+
+    mean_cv = np.mean(cv_scores)
+    mean_null = np.mean(scrambled_scores)
+    std_null = np.std(scrambled_scores) if len(scrambled_scores) > 1 else abs(mean_null) * 0.1
+    separation = (mean_cv - mean_null) / std_null if std_null > 0 else 0
+    
+    passed = bool(mean_cv > mean_null)
+    
+    return ValidationResult(
+        test_name=f"CrossVal_{scoring_type}",
+        passed=passed,
+        details=(
+            f"CV mean: {mean_cv:.4f}, Scrambled mean: {mean_null:.4f}, "
+            f"Separation: {separation:.2f} sigma. "
+            f"{'PASS' if passed else 'FAIL'}: Real ring structure "
+            f"{'outscores' if passed else 'does not outscore'} scrambled null."
+        ),
+        valid_scores={"cv_mean": mean_cv},
+        control_scores={"null_mean": mean_null},
+        metrics={
+            "cv_scores": cv_scores,
+            "scrambled_scores": scrambled_scores,
+            "separation_sigma": separation
+        }
+    )
+
+
 def run_full_validation(
     cluster_scores: Dict[int, Dict[str, float]],
     held_out_results: Optional[Dict[str, Dict]] = None,
-    scoring_types: Optional[List[str]] = None
+    scoring_types: Optional[List[str]] = None,
+    cross_val_data: Optional[Dict[str, Any]] = None
 ) -> List[ValidationResult]:
     """
     Runs all available validation checks and produces a consolidated report.
     """
+    # Distance is redundant with Tree after unification; ignore by default in sep tests
     if scoring_types is None:
-        scoring_types = ["Tree", "GMM", "Distance"]
+        scoring_types = ["Tree", "GMM"]
 
     all_results = []
 
@@ -263,7 +391,19 @@ def run_full_validation(
         cluster_scores, scoring_types)
     all_results.extend(separation_results)
 
-    # 2. Held-out data validation (if available)
+    # 2. Cross-Validation (Structural Discrimination)
+    if cross_val_data:
+        for stype in scoring_types:
+            res = validate_cross_validated_npc(
+                cluster_points=cross_val_data['cluster_points'],
+                model_coords=cross_val_data['model_coords'],
+                scoring_type=stype,
+                model=cross_val_data['model'],
+                avs=cross_val_data['avs']
+            )
+            all_results.append(res)
+
+    # 3. Held-out data validation (if available)
     if held_out_results:
         for stype in scoring_types:
             if stype in held_out_results:
