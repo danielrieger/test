@@ -114,7 +114,11 @@ def test_pipeline_e2e_top_to_bottom_execution():
             }
         }
         
-        val_results = run_full_validation(cluster_scores, held_out_results)
+        val_results = run_full_validation(
+            cluster_scores, 
+            held_out_results, 
+            scoring_types=["Tree", "GMM", "Distance"]
+        )
         
         # Verify that validation tests were generated
         test_names = [r.test_name for r in val_results]

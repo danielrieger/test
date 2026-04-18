@@ -370,6 +370,11 @@ class ScoringRestraintWrapper(IMP.pmi.restraints.RestraintBase):
         if self.scoring_restraint_instance is not None:
             self.scoring_restraint_instance.set_return_objective(enabled)
 
+    def set_weight(self, weight: float):
+        """Set the weight of the underlying IMP restraint."""
+        if self.scoring_restraint_instance is not None:
+            self.scoring_restraint_instance.set_weight(weight)
+
     def get_output(self):
         if self.scoring_restraint_instance:
             return self.scoring_restraint_instance.get_output()

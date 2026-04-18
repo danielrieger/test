@@ -1,0 +1,66 @@
+{
+    // === DATA PATHS ===
+    "paths": {
+        "smlm_data": "ShareLoc_Data/data.csv",     // Path to SMLM localization CSV
+        "pdb_data": "PDB_Data/7N85-assembly1.cif",  // PDB or MMCIF structure file
+        "av_parameters": "av_parameter.json",        // AV labeling parameters
+        "downsample_residues_per_bead": 10           // Coarse-graining resolution
+    },
+
+    // === EXECUTION ===
+    "execution": {
+        "test_scoring_types": ["Tree", "GMM", "Distance"],  // Options: "Tree", "GMM", "Distance"
+        "target_cluster_id": null  // null = auto-select largest | "random" = random NPC | integer = specific ID
+    },
+
+    // === FILTERING ===
+    // Controls which portion of the SMLM data is processed.
+    // NOTE: "auto" score_weight was designed for "random" filtering.
+    //       Using "none" with "auto" weight will cap the weight at 0.005.
+    "filtering": {
+        "type": "random",  // Options: "none" (full map), "random" (spatial subset), "filter" (manual cut)
+        "filter": {
+            "x_range": [10000, 12000],
+            "y_range": [0, 5000],
+            "z_range": null
+        },
+        "random": {
+            "size_percentage": 15  // Percentage of data to include (1-100)
+        }
+    },
+
+    // === CLUSTERING ===
+    "clustering": {
+        "method": "eman2",  // Options: "eman2" or "hdbscan"
+        "eman2_boxes": "info/micrograph_info.json",
+        "pixel_map": "pixel_map.json",
+        "perform_geometric_merging": false,
+        "min_cluster_size": 15,
+        "min_npc_points": 120  // Anything below this is considered 'noise' if present
+    },
+
+    // === OPTIMIZATION ===
+    "optimization": {
+        "mode": "bayesian",  // Options: "bayesian", "frequentist", "brownian"
+        "bayesian": {
+            "run_sampling": true,
+            "scoring_type": "GMM",        // Which restraint to optimize. Options: "Tree", "GMM", "Distance"
+            "number_of_frames": 200,      // REMC frames (more = better sampling, slower)
+            "monte_carlo_steps": 50,      // MC steps per frame
+            "score_weight": "auto",       // "auto" = 1/n_points (capped at min 0.005) | float = manual weight
+            "max_rb_trans": 4.0,          // Max rigid body translation per step (Angstroms)
+            "max_rb_rot": 0.04            // Max rigid body rotation per step (radians)
+        },
+        "frequentist": {
+            "scoring_type": "Tree",       // Note: GMM cannot be used for frequentist mode
+            "max_cg_steps": 200
+        },
+        "brownian": {
+            "scoring_type": "Tree",       // Note: GMM cannot be used for brownian mode
+            "temperature_k": 300.0,
+            "max_time_step_fs": 50000.0,
+            "number_of_bd_steps": 500,
+            "rmf_save_interval": 10
+        }
+    }
+}

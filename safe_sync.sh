@@ -1,19 +1,16 @@
 #!/bin/bash
 
-# Safe Synchronization Script (Windows -> WSL)
+# Safe Synchronization Script (WSL -> Windows)
 # -------------------------------------------
-# This script aligns the WSL environment with the Windows Deskstop workspace
+# This script aligns the Windows workspace with the WSL environment
 # while protecting unique data directories from deletion.
 
-SOURCE="/mnt/c/Users/User/OneDrive/Desktop/Thesis/smlm_score/"
-TARGET="/home/daniel/Thesis/smlm_score/"
+SOURCE="/home/daniel/Thesis/smlm_score/"
+TARGET="/mnt/c/Users/User/OneDrive/Desktop/Thesis/smlm_score/"
 
-echo "--- Starting Safe Synchronization (Source: Windows) ---"
+echo "--- Starting Safe Synchronization (Source: WSL) ---"
 
 # Identity sync for code, excludes large data and caches
-# NOTE: We DO NOT use --delete for the examples/ directory to ensure 
-# that untracked local data (like EMAN2 results) is preserved.
-
 rsync -avz \
     --exclude='.git/' \
     --exclude='__pycache__/' \

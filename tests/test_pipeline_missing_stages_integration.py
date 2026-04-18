@@ -272,6 +272,10 @@ def test_stage8_validation_integration_run_full_validation():
             "held_out_n_points": [50, 50],
         }
     }
-    results = run_full_validation(cluster_scores=cluster_scores, held_out_results=held_out)
+    results = run_full_validation(
+        cluster_scores=cluster_scores,
+        held_out_results=held_out,
+        scoring_types=["Tree", "GMM", "Distance"]
+    )
     assert len(results) >= 4
     assert any(r.test_name == "HeldOut_Tree" for r in results)

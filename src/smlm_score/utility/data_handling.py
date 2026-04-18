@@ -617,7 +617,11 @@ def compute_av(pdb_datapath, parameter):
     av_setup_params = parameter['av_parameter']
 
     m = IMP.Model()
-    hier = IMP.atom.read_mmcif(str(pathlib.Path(pdb_datapath).absolute()), m)
+    ext = str(pdb_datapath).lower()
+    if ext.endswith('.cif') or ext.endswith('.mmcif'):
+        hier = IMP.atom.read_mmcif(str(pathlib.Path(pdb_datapath).absolute()), m)
+    else:
+        hier = IMP.atom.read_pdb(str(pathlib.Path(pdb_datapath).absolute()), m, IMP.atom.CAlphaPDBSelector())
 
     for p_pdb in IMP.atom.get_by_type(hier, IMP.atom.ATOM_TYPE):
         IMP.core.XYZ(p_pdb).set_coordinates_are_optimized(False)

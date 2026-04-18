@@ -19,25 +19,35 @@ Bayesian scoring of Single-Molecule Localization Microscopy (SMLM) data against 
 - **Validation framework**: Separation tests and held-out cross-validation
 - **97 pytest tests**: Unit, integration, and robustness coverage
 
-## Installation
+## Quick Start (WSL / Linux)
 
-### Prerequisites
+The primary supported environment is **WSL2 (Ubuntu)** using **Miniforge**.
 
-- Python ≥ 3.11
-- [IMP](https://integrativemodeling.org/) with the `IMP.bff` module
-- CUDA toolkit (optional, for GPU acceleration)
+### 1. Requirements
+- **Conda/Miniforge** with Python 3.11
+- **IMP (Integrative Modeling Platform)** installed via conda:
+  ```bash
+  conda install -c salilab imp
+  ```
 
-### Setup
-
+### 2. Installation
 ```bash
 git clone https://github.com/danielrieger/test.git
 cd test
 pip install -e .
 ```
 
-### Environment
+### 3. Running the Pipeline
+The examples are pre-configured to run from the project root:
+```bash
+export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+python examples/NPC_example_BD.py
+```
 
-This project was developed with a conda-pack environment (Python 3.11). Core dependencies are listed in `requirements.txt`. The IMP library must be installed separately following the [IMP installation guide](https://integrativemodeling.org/nightly/doc/manual/installation.html).
+## Documentation
+For detailed information on the underlying physics and heuristics, see:
+- [Scoring Models & Mathematics](docs/scoring_models.md)
+- [Unit Testing & Validation](tests/README.md)
 
 ## Input Data
 
