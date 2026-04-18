@@ -40,14 +40,22 @@ pip install -e .
 ### 3. Running the Pipeline
 The examples are pre-configured to run from the project root:
 ```bash
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src
 python examples/NPC_example_BD.py
 ```
 
+### 4. Configuration
+The pipeline is entirely driven by `pipeline_config.json`. For a detailed guide on all available parameters and optimization options, see the documented template:
+- [Pipeline Configuration Reference](examples/pipeline_config_template.jsonc)
+
 ## Documentation
+
 For detailed information on the underlying physics and heuristics, see:
 - [Scoring Models & Mathematics](docs/scoring_models.md)
 - [Unit Testing & Validation](tests/README.md)
+
+> [!IMPORTANT]
+> **Unit Note**: The pipeline's mathematical engines operate in **nanometers (nm)** by default. Ensure your `sigma_av` and `searchradius` parameters are scaled appropriately (e.g., 5.0 for 50 Å).
+
 
 ## Input Data
 
@@ -135,14 +143,15 @@ The pipeline supports targeted modeling of particles manually or automatically p
 ## Maintenance & Data Safety
 
 ### Synchronization (Windows/WSL)
-Because input data (PDBs, SMLM CSVs) and EMAN2 results are often excluded from Git due to size, use the provided `safe_sync.sh` script to align development environments:
+Because input data (PDBs, SMLM CSVs) and EMAN2 results are often excluded from Git due to size, use the provided `safe_sync.sh` script to align development environments. 
 
+**Note: WSL is the Primary Source of Truth.**
 ```bash
-# In WSL:
+# Run in WSL to push code/config changes to the Windows workspace:
 ./safe_sync.sh
 ```
 
-This script uses `rsync --update` and explicit excludes to ensure that **untracked local data in WSL is never deleted or overwritten** when pulling code updates from the Windows "Source of Truth" workspace.
+This script uses `rsync --update` and explicit excludes to ensure that **untracked local data in WSL is protected** while keeping the Windows workspace synchronized as a mirror.
 
 ## Validation
 
