@@ -63,52 +63,58 @@ if HAS_CUDA:
     # GMM scoring CUDA kernel
     # ===================================================================
     @cuda.jit
-    def _gmm_score_kernel(model_xyzs, data_mean, data_cov, data_weight,
-                          sigma_av, n_models, n_data, output):
+    def _gmm_score_kernel(model_xyzs, data_mean, inv_Sigmas, log_prefactors,
+                          n_models, n_data, output):
         """
-        Each thread handles one GMM data component (index i).
-        Accumulates score contribution from all model points for that component.
-        Writes partial score to output[i].
+        Each thread handles one GMM model point (index m).
+        Computes log-sum-exp over data components for that model point.
+        Writes partial score to output[m].
         """
-        i = cuda.grid(1)
-        if i >= n_data:
+        m = cuda.grid(1)
+        if m >= n_models:
             return
 
-        # Build Sigma = data_cov[i] + sigma_M  (sigma_M = eye(3) * sigma_av)
-        S = cuda.local.array((3, 3), dtype=float64)
-        for r in range(3):
-            for c in range(3):
-                S[r, c] = data_cov[i, r, c]
-            S[r, r] += sigma_av
+        mx = model_xyzs[m, 0]
+        my = model_xyzs[m, 1]
+        mz = model_xyzs[m, 2]
 
-        # Determinant and inverse
-        det_S = _det3x3(S)
-        inv_S = cuda.local.array((3, 3), dtype=float64)
-        _inv3x3(S, inv_S, 1.0 / det_S)
+        # Pass 1: find max_log_prob
+        max_lp = -1e20 # A very low number
+        for i in range(n_data):
+            dx = mx - data_mean[i, 0]
+            dy = my - data_mean[i, 1]
+            dz = mz - data_mean[i, 2]
 
-        # Prefactor: (weight_M * weight_D) / ((2π)^1.5 * |Σ|^0.5)
-        weight_M = 1.0
-        prefactor = (weight_M * data_weight[i]) / (
-            math.pow(2.0 * math.pi, 1.5) * math.pow(abs(det_S), 0.5)
-        )
-        log_prefactor = math.log(prefactor)
-
-        # Sum over all model points
-        partial = 0.0
-        for m in range(n_models):
-            dx = model_xyzs[m, 0] - data_mean[i, 0]
-            dy = model_xyzs[m, 1] - data_mean[i, 1]
-            dz = model_xyzs[m, 2] - data_mean[i, 2]
-
-            # inv_S @ diff
-            t0 = inv_S[0, 0] * dx + inv_S[0, 1] * dy + inv_S[0, 2] * dz
-            t1 = inv_S[1, 0] * dx + inv_S[1, 1] * dy + inv_S[1, 2] * dz
-            t2 = inv_S[2, 0] * dx + inv_S[2, 1] * dy + inv_S[2, 2] * dz
+            t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
+            t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
+            t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
 
             exponent = -0.5 * (dx * t0 + dy * t1 + dz * t2)
-            partial += log_prefactor + exponent
+            lp = log_prefactors[i] + exponent
+            if lp > max_lp:
+                max_lp = lp
 
-        output[i] = partial
+        # Pass 2: compute log-sum-exp
+        sum_exp = 0.0
+        for i in range(n_data):
+            dx = mx - data_mean[i, 0]
+            dy = my - data_mean[i, 1]
+            dz = mz - data_mean[i, 2]
+
+            t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
+            t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
+            t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
+
+            exponent = -0.5 * (dx * t0 + dy * t1 + dz * t2)
+            lp = log_prefactors[i] + exponent
+            
+            if lp - max_lp > -80.0: # Optimization: skip exp if way below
+                sum_exp += math.exp(lp - max_lp)
+
+        if sum_exp > 0:
+            output[m] = max_lp + math.log(sum_exp)
+        else:
+            output[m] = max_lp
 
     # ===================================================================
     # Distance scoring CUDA kernel
@@ -178,7 +184,7 @@ if HAS_CUDA:
         """
         _log_cuda_once()
 
-        # Apply offset on host (small array, not worth sending to GPU)
+        # Apply offset on host
         if offset_xyz is not None:
             model_xyzs = model_xyzs + offset_xyz
 
@@ -191,19 +197,39 @@ if HAS_CUDA:
         n_models = model_xyzs.shape[0]
         sigma_av = 8.0
 
+        # Precompute constants on host
+        inv_Sigmas = np.zeros((n_data, 3, 3), dtype=np.float64)
+        log_prefactors = np.zeros(n_data, dtype=np.float64)
+        sigma_M = np.eye(3, dtype=np.float64) * sigma_av
+        weight_M = 1.0
+
+        for i in range(n_data):
+            Sigma = data_cov[i] + sigma_M
+            det_S = np.linalg.det(Sigma)
+            inv_Sigmas[i] = np.linalg.inv(Sigma)
+            prefactor = (weight_M * data_weight[i]) / (
+                math.pow(2.0 * math.pi, 1.5) * math.pow(abs(det_S), 0.5)
+            )
+            if prefactor > 0:
+                log_prefactors[i] = math.log(prefactor)
+            else:
+                log_prefactors[i] = -float('inf')
+
         # Transfer to GPU
         d_model = cuda.to_device(model_xyzs)
         d_mean = cuda.to_device(data_mean)
-        d_cov = cuda.to_device(data_cov)
-        d_weight = cuda.to_device(data_weight)
-        d_output = cuda.device_array(n_data, dtype=np.float64)
+        d_inv_Sigmas = cuda.to_device(inv_Sigmas)
+        d_log_prefactors = cuda.to_device(log_prefactors)
+        
+        # Output array sized for models, since each thread writes one model score
+        d_output = cuda.device_array(n_models, dtype=np.float64)
 
-        # Launch kernel
+        # Launch kernel over n_models
         threads_per_block = 256
-        blocks = (n_data + threads_per_block - 1) // threads_per_block
+        blocks = (n_models + threads_per_block - 1) // threads_per_block
         _gmm_score_kernel[blocks, threads_per_block](
-            d_model, d_mean, d_cov, d_weight,
-            sigma_av, n_models, n_data, d_output
+            d_model, d_mean, d_inv_Sigmas, d_log_prefactors,
+            n_models, n_data, d_output
         )
 
         # Copy result back and sum
