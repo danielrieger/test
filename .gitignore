@@ -41,13 +41,11 @@ review_notes.md
 *.log
 .eman2log.txt
 .eman2settings.json
-# PROTECTED DATA (DO NOT DELETE)
-# The following directories contain unique target data and must be preserved.
-examples/info/
-examples/picked_particles/
-examples/PDB_Data/
-examples/ShareLoc_Data/
-examples/SuReSim_Input/
-examples/bayesian_cluster_*/
-examples/brownian_cluster_*/
-examples/frequentist_cluster_*/
+nnet_*.hdf
+trainout_*.hdf
+picked_particles/
+
+# Root-level simulation outputs
+bayesian_cluster_*
+frequentist_cluster_*
+brownian_cluster_*

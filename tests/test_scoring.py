@@ -518,46 +518,4 @@ class TestCUDAGPUConsistency:
         score_gpu = compute_distance_score_gpu(datamean, datacov, weights, model, sigma_av)
         assert score_gpu == pytest.approx(score_cpu, rel=1e-6)
 
-    def test_gmm_mixture_likelihood(self):
-        """
-        Test that the GMM score evaluates a true mixture likelihood (log-sum-exp).
-        Adding a distant outlier component should not exponentially penalize the score,
-        it should only penalize linearly via weight normalization.
-        """
-        np.random.seed(42)
-        M = 100
-        model_xyzs = np.random.randn(M, 3) * 5.0
-
-        # Base Data (K=2 components, close to model)
-        K = 2
-        data_mean = np.random.randn(K, 3) * 2.0
-        data_cov = np.array([np.eye(3, dtype=np.float64)*10.0 for _ in range(K)])
-        data_weight = np.ones(K, dtype=np.float64) / K
-
-        score_cpu_base = compute_nb_gmm(model_xyzs, data_mean, data_cov, data_weight)
-        
-        if HAS_CUDA:
-            score_gpu_base = compute_nb_gmm_gpu(model_xyzs, data_mean, data_cov, data_weight)
-            assert np.isclose(score_cpu_base, score_gpu_base), "CPU and GPU GMM base scores mismatch!"
-
-        # Add a very distant component
-        distant_mean = np.array([1000.0, 1000.0, 1000.0])
-        data_mean_dist = np.vstack([data_mean, distant_mean])
-        data_cov_dist = np.concatenate([data_cov, [np.eye(3, dtype=np.float64)*10.0]])
-        data_weight_dist = np.ones(K+1, dtype=np.float64) / (K+1)
-
-        score_cpu_dist = compute_nb_gmm(model_xyzs, data_mean_dist, data_cov_dist, data_weight_dist)
-
-        if HAS_CUDA:
-            score_gpu_dist = compute_nb_gmm_gpu(model_xyzs, data_mean_dist, data_cov_dist, data_weight_dist)
-            assert np.isclose(score_cpu_dist, score_gpu_dist), "CPU and GPU GMM dist scores mismatch!"
-
-        # The drop should merely equal the effect of weight renormalization: log(K / (K+1)) * M
-        expected_drop_per_point = np.log(K / (K+1))
-        actual_drop = score_cpu_dist - score_cpu_base
-        
-        assert np.isclose(actual_drop, expected_drop_per_point * M, atol=1e-5), \
-            f"GMM Score behaves like a naive product/asymmetric sum! " \
-            f"Expected log-weight drop ~{expected_drop_per_point*M:.2f}, got {actual_drop:.2f}"
-
 

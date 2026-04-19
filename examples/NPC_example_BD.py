@@ -215,7 +215,14 @@ def trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts):
         if ST != "GMM":
             print(f"  [Brownian] Triggering BD simulation for cluster {cid}...")
             b = opt["brownian"]
-            run_brownian_dynamics_simulation(m, pdb_h, avs, sr, f"brownian_cluster_{cid}", b["temperature_k"], b["max_time_step_fs"], b["number_of_bd_steps"], b["rmf_save_interval"])
+            run_brownian_dynamics_simulation(
+                m, pdb_h, avs, sr, 
+                output_dir=f"brownian_cluster_{cid}", 
+                temperature=b["temperature_k"], 
+                max_time_step_fs=b["max_time_step_fs"], 
+                number_of_bd_steps=b["number_of_bd_steps"], 
+                rmf_save_interval_frames=b["rmf_save_interval"]
+            )
             return True
         print("  [Brownian] Skipping: GMM not supported for BD.")
     return False

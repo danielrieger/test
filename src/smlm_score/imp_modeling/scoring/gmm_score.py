@@ -160,8 +160,8 @@ def _compute_nb_gmm_cpu(
 ):
     """Numba JIT CPU kernel for GMM log-likelihood (Bonomi et al. 2019).
 
-    Computes the log-sum-exp of probabilities over data components for each model point,
-    using the combined covariance Sigma = Sigma_data + Sigma_model.
+    Computes the sum of log-probabilities over all model-data pairs using
+    the combined covariance Sigma = Sigma_data + Sigma_model.
 
     Parameters
     ----------
@@ -185,77 +185,34 @@ def _compute_nb_gmm_cpu(
 
     # Offset when out of area
     if offset_xyz is not None:
-        model_xyzs = model_xyzs + offset_xyz
+        model_xyzs = model_xyzs + offset_xyz  # Use + instead of += to avoid mutating input
 
+    # placeholder for AV covariance (instantiated outside loop for numba efficiency)
     sigma_av = 8.0
     sigma_M = np.eye(3, dtype=np.float64) * sigma_av
     weight_M = 1.0
 
-    n_data = len(data_mean)
-    n_models = len(model_xyzs)
+    # Data loop (Outer loop to match data-driven GMM components)
+    for i in range(len(data_mean)):
+        mean_D = data_mean[i]
+        sigma_D = data_cov[i]
+        weight_D = data_weight[i]
 
-    # Precompute inverses and prefactors
-    inv_Sigmas = np.zeros((n_data, 3, 3), dtype=np.float64)
-    log_prefactors = np.zeros(n_data, dtype=np.float64)
+        Sigma = sigma_D + sigma_M  # Bonomi et al. 2019, Bayesian EM eq. 12
 
-    for i in range(n_data):
-        Sigma = data_cov[i] + sigma_M
-        det_S = np.linalg.det(Sigma)
-        inv_Sigmas[i] = np.linalg.inv(Sigma)
-        prefactor = (weight_M * data_weight[i]) / (
-            (2. * np.pi) ** 1.5 * np.abs(det_S) ** 0.5
-        )
-        if prefactor > 0:
-            log_prefactors[i] = np.log(prefactor)
-        else:
-            log_prefactors[i] = -np.inf
+        # Precompute values that are constant for this GMM component
+        prefactor = (weight_M * weight_D) / ((2. * np.pi) ** (3. / 2.) * np.linalg.det(Sigma) ** 0.5)
+        inv_Sigma = np.linalg.inv(Sigma)
+        log_prefactor = np.log(prefactor)
 
-    # Independent Mixture Loop: 
-    # For each model point, calculate log(sum(P(m|D_k)))
-    for m_idx in range(n_models):
-        mx = model_xyzs[m_idx, 0]
-        my = model_xyzs[m_idx, 1]
-        mz = model_xyzs[m_idx, 2]
+        # Model loop
+        for m_idx in range(len(model_xyzs)):
+            model_xyz = model_xyzs[m_idx]
 
-        # Pass 1: Find max log prob for this model point
-        max_lp = -np.inf
-        for i in range(n_data):
-            dx = mx - data_mean[i, 0]
-            dy = my - data_mean[i, 1]
-            dz = mz - data_mean[i, 2]
-
-            t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
-            t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
-            t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
-
-            exponent = -0.5 * (dx * t0 + dy * t1 + dz * t2)
-            lp = log_prefactors[i] + exponent
-            if lp > max_lp:
-                max_lp = lp
-
-        # Pass 2: compute sum of exps
-        sum_exp = 0.0
-        for i in range(n_data):
-            dx = mx - data_mean[i, 0]
-            dy = my - data_mean[i, 1]
-            dz = mz - data_mean[i, 2]
-
-            t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
-            t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
-            t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
-
-            exponent = -0.5 * (dx * t0 + dy * t1 + dz * t2)
-            lp = log_prefactors[i] + exponent
-            
-            # Subtraction and thresholding for numeric stability
-            diff_lp = lp - max_lp
-            if diff_lp > -80.0:
-                sum_exp += np.exp(diff_lp)
-
-        if sum_exp > 0:
-            score_total += max_lp + np.log(sum_exp)
-        else:
-            score_total += max_lp
+            diff = model_xyz - mean_D
+            # Explicit dot product for numba compatibility over '@'
+            exponent = -0.5 * np.dot(diff.T, np.dot(inv_Sigma, diff))
+            score_total += log_prefactor + exponent
 
     return score_total
 

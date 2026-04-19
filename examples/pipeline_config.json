@@ -31,7 +31,7 @@
         }
     },
     "clustering": {
-        "method": "eman2",
+        "method": "hdbscan",
         "eman2_boxes": "info/micrograph_info.json",
         "pixel_map": "pixel_map.json",
         "perform_geometric_merging": false,
@@ -39,7 +39,7 @@
         "min_npc_points": 120
     },
     "optimization": {
-        "mode": "bayesian",
+        "mode": "brownian",
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",

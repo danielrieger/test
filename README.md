@@ -19,35 +19,25 @@ Bayesian scoring of Single-Molecule Localization Microscopy (SMLM) data against 
 - **Validation framework**: Separation tests and held-out cross-validation
 - **97 pytest tests**: Unit, integration, and robustness coverage
 
-## Quick Start (WSL / Linux)
+## Installation
 
-The primary supported environment is **WSL2 (Ubuntu)** using **Miniforge**.
+### Prerequisites
 
-### 1. Requirements
-- **Conda/Miniforge** with Python 3.11
-- **IMP (Integrative Modeling Platform)** installed via conda:
-  ```bash
-  conda install -c salilab imp
-  ```
+- Python ≥ 3.11
+- [IMP](https://integrativemodeling.org/) with the `IMP.bff` module
+- CUDA toolkit (optional, for GPU acceleration)
 
-### 2. Installation
+### Setup
+
 ```bash
 git clone https://github.com/danielrieger/test.git
 cd test
 pip install -e .
 ```
 
-### 3. Running the Pipeline
-The examples are pre-configured to run from the project root:
-```bash
-export PYTHONPATH=$PYTHONPATH:$(pwd)/src
-python examples/NPC_example_BD.py
-```
+### Environment
 
-## Documentation
-For detailed information on the underlying physics and heuristics, see:
-- [Scoring Models & Mathematics](docs/scoring_models.md)
-- [Unit Testing & Validation](tests/README.md)
+This project was developed with a conda-pack environment (Python 3.11). Core dependencies are listed in `requirements.txt`. The IMP library must be installed separately following the [IMP installation guide](https://integrativemodeling.org/nightly/doc/manual/installation.html).
 
 ## Input Data
 
@@ -110,39 +100,6 @@ smlm_score/
 │   └── visualize_gmm_selection.py # Intelligent NPC selection & BIC plots
 └── tests/                       # 97 pytest tests
 ```
-
-## Advanced Workflows
-
-### 1. Bayesian Trajectory Visualization (RMF)
-When running in `bayesian` optimization mode, the pipeline generates two state-of-the-art RMF3 trajectories in the output directory (e.g., `bayesian_cluster_11/`):
-- `av_trajectory.rmf3`: A lightweight file containing only the moving fluorophore center points (AVs).
-- `full_trajectory.rmf3`: A high-fidelity reconstruction containing all ~15,000 protein beads. The structural pose is recovered from sampled AV coordinates using a rigid-body SVD transformation (Kabsch algorithm).
-
-**To visualize in ChimeraX:**
-1. Open `full_trajectory.rmf3`.
-2. Use the **Log** or **Tools > General > Playback** to animate the REMC sampling steps.
-3. You will see the entire protein assembly moving as a unified rigid body.
-
-### 2. EMAN2 Particle Picking
-The pipeline supports targeted modeling of particles manually or automatically picked via EMAN2:
-1. Run `e2boxer.py` on your `micrograph.mrc` to pick NPCs.
-2. Ensure `examples/info/micrograph_info.json` exists (contains the box coordinates).
-3. Set `"clustering": { "method": "eman2" }` in `pipeline_config.json`.
-4. The pipeline will automatically slice the SMLM data into `examples/picked_particles/` and optimize the targets.
-
-*Technical Note: If your box metadata is lost, use `examples/recover_boxes.py` to rebuild it from existing CSV fragments.*
-
-## Maintenance & Data Safety
-
-### Synchronization (Windows/WSL)
-Because input data (PDBs, SMLM CSVs) and EMAN2 results are often excluded from Git due to size, use the provided `safe_sync.sh` script to align development environments:
-
-```bash
-# In WSL:
-./safe_sync.sh
-```
-
-This script uses `rsync --update` and explicit excludes to ensure that **untracked local data in WSL is never deleted or overwritten** when pulling code updates from the Windows "Source of Truth" workspace.
 
 ## Validation
 
