@@ -1,0 +1,20 @@
+- [x] Prepare `master_benchmark.py` infrastructure
+    - [x] Implement dual-theme (Dark/Light) controller
+    - [x] Implement synthetic data generator
+    - [x] Implement Numba warmup routine
+- [x] Core Benchmarking Routines
+    - [x] Scaling Sweep (Fig A)
+    - [x] Initialization/MCMC Tradeoff (Fig B)
+    - [x] GMM Selection Cost (Fig C)
+    - [x] Tree Speedup Comparison (Fig D)
+    - [x] Radius Sensitivity Sweep (Fig E)
+- [x] Refined Figure Generation
+    - [x] Fig A: Log-Log Scaling with Complexity Labels ($O(N \log M)$ etc)
+    - [x] Fig B: Stacked Bar with Clear Composite Legend
+    - [x] Fig C: GMM BIC Cost Analysis
+    - [x] Fig D: Comparison Plot with Adjusted Label Spacing + Legend Fix
+    - [x] Fig E: Radius/Algorithmic Envelope Analysis
+- [x] Finalization
+    - [x] Synchronize to WSL
+    - [x] Run end-to-end (Generate 10 images)
+    - [x] Push results to GitHub

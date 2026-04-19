@@ -1,0 +1,623 @@
+﻿[
+    {
+        "date":  "2026-03-17 21:09:15",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "thesis_code_crossreference.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\thesis_code_crossreference.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-17_2109_thesis_code_crossreference.md",
+        "bytes":  6863,
+        "preview":  "# Code Assessment: smlm_score vs Tutorials ## Quick Summary | Tutorial Concept | Your Code Status | Notes | |:---|:---:|:---| | IMP Model / Particle / XYZ | âœ… Correct | `input.py`, `data_handling.py` | | IMP.bff AV computation | âœ… Correct | `compute_av()` matches BFF pattern |"
+    },
+    {
+        "date":  "2026-03-17 21:14:56",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "code_review_NPC_example_BD.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\code_review_NPC_example_BD.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-17_2114_code_review_NPC_example_BD.md",
+        "bytes":  5838,
+        "preview":  "# Code Review: NPC_example_BD.py ## ðŸ”´ Critical Bugs ### Bug 1: `TARGET_CLUSTER_ID = 0` may not exist (Line 29 â†’ 108) ```python TARGET_CLUSTER_ID = 0 # Line 29"
+    },
+    {
+        "date":  "2026-03-19 23:29:18",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "NPC_Modeling_Pipeline_Overview.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\NPC_Modeling_Pipeline_Overview.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-19_2329_NPC_Modeling_Pipeline_Overview.md",
+        "bytes":  2965,
+        "preview":  "# SMLM-IMP Modeling Pipeline Overview This document outlines the formalized 4-stage workflow for processing SMLM localizations, isolating individual NPC structures, and scoring them against a 7N85 PDB model using Bayesian Markov Chain Monte Carlo (MCMC) sampling. --- ## Stage 1: Data Mastery (Ingest \u0026 ROI) * **Input:** SMLM CSV files (ShareLoc format) + PDB Structural Model (`7N85-assembly1.cif`)."
+    },
+    {
+        "date":  "2026-03-21 00:05:15",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "NPC_pipeline_manual.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\NPC_pipeline_manual.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-21_0005_NPC_pipeline_manual.md",
+        "bytes":  6632,
+        "preview":  "# SMLM Score Pipeline: Manual \u0026 Technical Overview This manual provides instructions on how to use the `NPC_example_BD.py` script, outlines what the recently fixed features do, and offers a detailed, step-by-step overview of the entire modelling and scoring process. --- ## 1. Quick Start Guide "
+    },
+    {
+        "date":  "2026-03-22 17:49:35",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "benchmarking_thesis_results.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\benchmarking_thesis_results.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-22_1749_benchmarking_thesis_results.md",
+        "bytes":  1937,
+        "preview":  "# Scoring Functions Computational Benchmarks Here are the benchmarking results comparing **Distance** $\\mathcal{O}(NM)$, **Tree** $\\mathcal{O}(N \\log M)$, and **GMM** $\\mathcal{O}(NK)$ scoring methods. The benchmarks bypass IMP overhead entirely and directly measure the mathematical execution times as tested in `tests/test_scoring.py` during your MCMC sampling. ## Figure A: Per-Step Scaling (Time vs Data Size) This log-log plot demonstrates the empirical scaling behaviors of the three methods as the raw SMLM dataset grows from extremely sparse (100 points) to extremely dense (10,000 points). ![Scoring Engine Computational Scaling](file:///C:/Users/User/.gemini/antigravity/brain/a618d888-2bed-4b8c-a0e2-d6f6569f78de/bench_figA_scaling.png)"
+    },
+    {
+        "date":  "2026-03-22 18:04:29",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "benchmarking_thesis_results_experimental.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\benchmarking_thesis_results_experimental.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-22_1804_benchmarking_thesis_results_experimental.md",
+        "bytes":  1997,
+        "preview":  "# Scoring Benchmarks on Real Experimental SMLM Data This benchmark repeats the pure computational tests, but this time extracts precise subsets from your actual `ShareLoc_Data/data.csv` bounding box (10k-12k x, 0-5k y). This proves to your thesis readers that the synthetic noise scaling perfectly aligns with the real-world cluster structures handled by the pipeline. ## Figure C: Experimental Evaluation Scaling (Log-Log) Using the real dataset (ranging up to the maximum 29,472 points found in the bounding box), we again clearly see the distinct mathematical complexity classes. ![Experimental Scaling](file:///C:/Users/User/.gemini/antigravity/brain/a618d888-2bed-4b8c-a0e2-d6f6569f78de/bench_figC_exp_scaling.png)"
+    },
+    {
+        "date":  "2026-03-22 21:08:08",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "implementation_plan_frequentist.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\implementation_plan_frequentist.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-22_2108_implementation_plan_frequentist.md",
+        "bytes":  5846,
+        "preview":  "# Frequentist Optimization Pipeline Add a gradient-based (MLE) optimization path to the existing Bayesian MCMC pipeline, selectable via a flag. Instead of sampling a posterior distribution, a local optimizer drives the IMP model to a single best-fit structure. ## User Review Required \u003e [!IMPORTANT] \u003e **No GMM support.** GMM\u0027s likelihood is computed on the *fitted Gaussian parameters*, not on the raw data points. Moving the IMP model particles does not change the GMM landscapeâ€”the gradient is always zero w.r.t. model coordinates. Only **Distance** and **Tree** scores have a true model-dependent gradient and are suitable for optimization."
+    },
+    {
+        "date":  "2026-03-22 21:50:53",
+        "folder":  "a618d888-2bed-4b8c-a0e2-d6f6569f78de",
+        "name":  "implementation_plan_brownian.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\a618d888-2bed-4b8c-a0e2-d6f6569f78de\\implementation_plan_brownian.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\a618d888-2bed-4b8c-a0e2-d6f6569f78de_2026-03-22_2150_implementation_plan_brownian.md",
+        "bytes":  2585,
+        "preview":  "# Brownian Dynamics Integration Plan The pipeline currently supports: 1. **Bayesian Mode (MCMC)**: Uses Monte Carlo sampling to explore the posterior distribution. Needs no gradients (works with GMM). 2. **Frequentist Mode (CG)**: Uses `ConjugateGradients` to find the exact local minimum. Relies on analytical gradients (Tree/Distance). We will add a third mode: 3. **Brownian Mode (BD)**: Uses `IMP.atom.BrownianDynamics`. It combines the gradient-following of the Frequentist mode with temperature-based random perturbations, simulating the physical \"pull\" of the data on the molecular structure over time. Like Frequentist mode, it requires the analytical gradients we just implemented for Tree and Distance scores."
+    },
+    {
+        "date":  "2026-03-27 20:24:22",
+        "folder":  "1c878c32-e0ce-4228-8d49-dbf6f865e789",
+        "name":  "walkthrough_clustering_fix.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\1c878c32-e0ce-4228-8d49-dbf6f865e789\\walkthrough_clustering_fix.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\1c878c32-e0ce-4228-8d49-dbf6f865e789_2026-03-27_2024_walkthrough_clustering_fix.md",
+        "bytes":  2606,
+        "preview":  "# Pipeline Update: Memory Efficiency \u0026 API Consistency The recent updates focused on resolving a critical memory crash during NPC clustering and standardizing data filtering API return types across the codebase. ## 1. Memory Crash Fix (Stage 4 Clustering) The `isolate_individual_npcs` function in [data_handling.py](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/src/utility/data_handling.py) was prone to a `MemoryError` (unable to allocate ~25 GiB) when `perform_geometric_merging=True` was applied to large clean datasets (~89k points). - **The Issue**: Point-wise `AgglomerativeClustering` with complete linkage has $O(n^2)$ memory complexity because it computes a full distance matrix (`pdist`). - **The Fix**: Introduced a **safe split strategy** at [line 255](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/src/utility/data_handling.py#L255):"
+    },
+    {
+        "date":  "2026-03-27 21:21:45",
+        "folder":  "1c878c32-e0ce-4228-8d49-dbf6f865e789",
+        "name":  "walkthrough_workspace_cleanup.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\1c878c32-e0ce-4228-8d49-dbf6f865e789\\walkthrough_workspace_cleanup.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\1c878c32-e0ce-4228-8d49-dbf6f865e789_2026-03-27_2121_walkthrough_workspace_cleanup.md",
+        "bytes":  1518,
+        "preview":  "# Workspace Cleanup Walkthrough I have completed the cleanup of the `smlm_score` workspace. The following unnecessary output files and directories have been removed: ## 1. Caches and Build Artifacts - **`.pytest_cache`**: Removed the root-level pytest cache directory. - **`__pycache__`**: Recursively deleted all 13 Python bytecode cache directories across the `src`, `tests`, and `examples` folders. "
+    },
+    {
+        "date":  "2026-03-27 22:30:35",
+        "folder":  "1c878c32-e0ce-4228-8d49-dbf6f865e789",
+        "name":  "walkthrough_robustness_fixes.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\1c878c32-e0ce-4228-8d49-dbf6f865e789\\walkthrough_robustness_fixes.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\1c878c32-e0ce-4228-8d49-dbf6f865e789_2026-03-27_2230_walkthrough_robustness_fixes.md",
+        "bytes":  2178,
+        "preview":  "# Pipeline Robustness \u0026 2D Data Handling Walkthrough The most recent set of updates focused on improving the robustness of the SMLM-IMP pipeline, specifically targeting edge cases in held-out validation and 2D data processing. ## 1. 2D Data Robustness in `get_held_out_complement()` Previously, the held-out validation logic in [data_handling.py](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/src/utility/data_handling.py) assumed that the input SMLM data would always contain a `z [nm]` column. When processing 2D datasets, this caused a crash during the calculation of the held-out complement. - **The Fix**: The `get_held_out_complement()` function was patched to mirror the logic in `flexible_filter_smlm_data()`. It now checks for the existence of the axial coordinate column and automatically fills missing values with `0.0` (or the specified `fill_z_value`), ensuring that 2D inputs are handled gracefully without crashing. "
+    },
+    {
+        "date":  "2026-03-28 18:25:08",
+        "folder":  "1c878c32-e0ce-4228-8d49-dbf6f865e789",
+        "name":  "walkthrough_validation_reliability.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\1c878c32-e0ce-4228-8d49-dbf6f865e789\\walkthrough_validation_reliability.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\1c878c32-e0ce-4228-8d49-dbf6f865e789_2026-03-28_1825_walkthrough_validation_reliability.md",
+        "bytes":  2690,
+        "preview":  "# Validation Logic \u0026 Reliability Walkthrough Recent refinements to the validation suite focused on correcting data payload inconsistencies and implementing a more accurate scoring normalization strategy for cross-validation. ## 1. Held-Out Validation `KeyError` Fix Previously, the `run_full_validation()` function in [validation.py](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/src/validation/validation.py) expected specific metadata keys (`valid_n_points` and `held_out_n_points`) to perform point-count-aware normalization. In earlier versions of the example script, these were missing, causing a `KeyError`. - **The Fix**: The [NPC_example_BD.py](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/examples/NPC_example_BD.py#L241-249) script now explicitly tracks and provides these counts for each scoring chunk. This ensures that the validation suite can correctly normalize scores before comparing valid NPC clusters against held-out data. "
+    },
+    {
+        "date":  "2026-03-28 19:22:16",
+        "folder":  "1c878c32-e0ce-4228-8d49-dbf6f865e789",
+        "name":  "walkthrough_clustering_visualization.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\1c878c32-e0ce-4228-8d49-dbf6f865e789\\walkthrough_clustering_visualization.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\1c878c32-e0ce-4228-8d49-dbf6f865e789_2026-03-28_1922_walkthrough_clustering_visualization.md",
+        "bytes":  2285,
+        "preview":  "# NPC Clustering Visualization Walkthrough A new visualization script, [visualize_npc_clustering_steps_random.py](file:///C:/Users/User/OneDrive/Desktop/Thesis/smlm_score/examples/visualize_npc_clustering_steps_random.py), has been added to provide step-by-step insight into the NPC identification process. This tool is designed to generate high-quality figures for the thesis by breaking down the clustering pipeline into three distinct stages. ## 1. The 3-Step Clustering Pipeline The script mirrors the production pipeline\u0027s logic, documenting the sequence of operations applied after initial spatial filtering: 1. **Initial Clustering (HDBSCAN)**: Densitiy-based identification of primary localization groups. 2. **Geometric Merging**: Complete-linkage agglomerative clustering that merges adjacent clusters within 140 nm. This includes the \"safety split\" optimization for large datasets."
+    },
+    {
+        "date":  "2026-03-29 17:59:38",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_github.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_github.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-03-29_1759_task_github.md",
+        "bytes":  418,
+        "preview":  "- [x] Create/Update `.gitignore` to exclude caches and large simulation outputs - [x] Stage core project files (`src/`, `tests/`, `examples/`, `environment.toml`) - [x] Integrate and stage new analysis script `analyze_target_cluster_candidates.py` - [ ] Authenticate and create a new repository on github.com via Browser - [ ] Configure local repository remote and push to `main` - [ ] Verify the repository on GitHub"
+    },
+    {
+        "date":  "2026-03-30 23:07:55",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-03-30_2307_implementation_plan.md",
+        "bytes":  1922,
+        "preview":  "# Implementation Plan - Thesis 3D NPC Visualization This plan outlines the creation of a high-resolution visualization tool to showcase the alignment of the NPC structural model with real 3D SMLM data. ## User Review Required - **Model Representation**: Confirmed: Discrete points (fluorophore attachment sites) for scientific accuracy. - **Labels/Title**: Confirmed: Keep it clean (no quality scores in titles) for a \"Fig. 1\" style look."
+    },
+    {
+        "date":  "2026-03-31 21:09:36",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_stylized.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_stylized.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-03-31_2109_implementation_plan_stylized.md",
+        "bytes":  2476,
+        "preview":  "# Implementation Plan - Stylized Thesis 3D Visualizations This plan outlines the creation of three distinct stylized 3D visualization modes to provide high-quality alternatives to raw point cloud plots for your thesis. ## User Review Required \u003e [!IMPORTANT] \u003e - **Grid Resolution**: To keep the density rendering fast, I will use a 50x50x50 grid. This provides a balance between detail and performance."
+    },
+    {
+        "date":  "2026-03-31 21:32:05",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_fitting_sequence.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_fitting_sequence.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-03-31_2132_implementation_plan_fitting_sequence.md",
+        "bytes":  2182,
+        "preview":  "# Implementation Plan - Fitting Sequence Visualization (Wu et al. Style) This plan outlines the creation of a 4-panel figure that illustrates the iterative optimization of the SMLM-score alignment. ## User Review Required \u003e [!IMPORTANT] \u003e - **Synthetic Optimization Path**: Since our pipeline often finds the best fit in a single step (via PCA + Scoring), I will \"reverse-engineer\" a sequence by starting with a slight translation/rotation offset and interpolating towards the optimal fit across 4 panels."
+    },
+    {
+        "date":  "2026-03-31 22:14:39",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_reorg.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_reorg.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-03-31_2214_implementation_plan_reorg.md",
+        "bytes":  2147,
+        "preview":  "# Implementation Plan - Figure Organization for Thesis This plan outlines the reorganization of the project\u0027s figure structure to ensure a professional and unified asset management system for your thesis. ## User Review Required \u003e [!IMPORTANT] \u003e - **Unified Root**: All figure output will be moved into `examples/figures/` to keep the root directory clean."
+    },
+    {
+        "date":  "2026-04-03 18:07:11",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_ranking.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_ranking.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-03_1807_implementation_plan_ranking.md",
+        "bytes":  1531,
+        "preview":  "# Implementation Plan - Highest Quality NPC Selection for GMM Plots The current `visualize_gmm_selection.py` script picks the first available cluster (`index 0`). This plan ensures that the BIC curve and GMM overlay are generated for the NPC that best matches the structural ground-truth in the dataset. ## User Review Required \u003e [!IMPORTANT] \u003e - **Ranking Overhead**: Adding a ranking step requires loading the PDB model and evaluating all clusters, which may add 30-60 seconds to the script execution time depending on the dataset size."
+    },
+    {
+        "date":  "2026-04-03 18:16:44",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-03_1816_walkthrough.md",
+        "bytes":  2416,
+        "preview":  "# Thesis Visualization \u0026 Benchmarking - Project Wrap-up I have completed the reorganization and enhancement of your thesis visualization suite. The repository now features a professional, categorized asset structure and high-impact figures supported by a rigorous ranking logic. ## 1. Key Achievements ### Optimized Quality Control (QC) - **Highest Quality Selection**: We successfully implemented a ranking algorithm that evaluates every detected NPC (e.g., 170 candidates) against the structural ground-truth model."
+    },
+    {
+        "date":  "2026-04-03 19:58:13",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_sync.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_sync.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-03_1958_implementation_plan_sync.md",
+        "bytes":  2258,
+        "preview":  "# Implementation Plan - Documentation and Repository Sync This plan ensures that the repository is fully documented, professional, and synchronized with the latest thesis figures and benchmarking results before final submission. ## User Review Required \u003e [!IMPORTANT] \u003e - **Git Sync \u0026 Gitignore**: I will modify `.gitignore` to **stop ignoring** `examples/figures/`. This is necessary to ensure your thesis galleries and benchmarks are visible on GitHub. Raw data files (`.cif`, `.csv`) will remain safely ignored."
+    },
+    {
+        "date":  "2026-04-06 22:17:35",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_radius.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_radius.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-06_2217_implementation_plan_radius.md",
+        "bytes":  1586,
+        "preview":  "# Implementation Plan - Radius Sensitivity Benchmark This plan aims to provide a definitive technical answer to why the Tree engine can be slower than raw Distance scoring on dense experimental data. We will quantify the \"Pruning Trade-off\" by testing how the search radius affects execution time. ## User Review Required \u003e [!IMPORTANT] \u003e - **Data Selection**: I will use a high-density 10,000-point sample from your experimental data for this test to ensure the results are representative of \"Real World\" NPC clusters."
+    },
+    {
+        "date":  "2026-04-07 23:34:22",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-07_2334_task.md",
+        "bytes":  313,
+        "preview":  "# Task: Radius Sensitivity Benchmark \u0026 Tree Optimization - [ ] Optimize `src/imp_modeling/scoring/tree_score.py` (Vectorize the inner loop) - [ ] Create `examples/benchmark_radius_sensitivity.py` - [ ] Execute Radius Sweep Benchmark - [ ] Generate `bench_figE_radius_sensitivity.png` - [ ] Final Repository Sync"
+    },
+    {
+        "date":  "2026-04-07 23:59:24",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_logging.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_logging.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-07_2359_implementation_plan_logging.md",
+        "bytes":  3762,
+        "preview":  "# Implementation Plan â€” Sampling Trajectory Logger ## Goal Export a CSV file containing the XYZ coordinates of all model particles (AVs), the scoring value, and frame metadata at **every sampling frame** during Bayesian REMC. This will allow the user to verify that (a) coordinates are actually changing between frames, and (b) the score evolves as expected. ## Background \u0026 Design Rationale "
+    },
+    {
+        "date":  "2026-04-08 00:53:36",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_clone_imp.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_clone_imp.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-08_0053_implementation_plan_clone_imp.md",
+        "bytes":  1757,
+        "preview":  "# Implementation Plan â€” IMP Repository Fork ## Goal Get a personal copy of the [IMP (Integrative Modeling Platform)](https://github.com/salilab/imp) codebase under `danielrieger/imp` for code analysis. ## License â€” No Issues "
+    },
+    {
+        "date":  "2026-04-08 00:58:35",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_fork_imp.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_fork_imp.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-08_0058_task_fork_imp.md",
+        "bytes":  198,
+        "preview":  "- [x] Navigate to salilab/imp on GitHub \u003c!-- id: 0 --\u003e - [x] Initiate Fork to danielrieger/imp \u003c!-- id: 1 --\u003e - [x] Verify repository existence at https://github.com/danielrieger/imp \u003c!-- id: 2 --\u003e"
+    },
+    {
+        "date":  "2026-04-08 00:58:41",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_fork_imp.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_fork_imp.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-08_0058_walkthrough_fork_imp.md",
+        "bytes":  1034,
+        "preview":  "# Walkthrough - IMP Repository Fork I have successfully created a personal fork of the **Integrative Modeling Platform (IMP)** in your GitHub account. This copy is now available for us to analyze the underlying algorithms, data structures, and implementation details. ## Changes Made ### GitHub Repository - **New Repository**: [danielrieger/imp](https://github.com/danielrieger/imp)"
+    },
+    {
+        "date":  "2026-04-10 13:58:10",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_infrastructure.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_infrastructure.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1358_implementation_plan_infrastructure.md",
+        "bytes":  7638,
+        "preview":  "# Infrastructure Upgrade â€” WSL2 Migration \u0026 EMAN2 ## Problem Statement The current development environment (`C:\\envs\\py311`) was transplanted from another machine via `conda-pack`. This causes: 1. **No package manager** â€” `conda` itself is absent; you cannot install or update packages. 2. **Hardcoded DLL paths** â€” 30+ IMP native C++ libraries (`imp_kernel.dll`, `imp_atom.dll`, etc.) plus ~200 system DLLs in `Library\\bin` have baked-in Windows paths from the source machine."
+    },
+    {
+        "date":  "2026-04-10 14:16:59",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_reorg_v2.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_reorg_v2.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1416_implementation_plan_reorg_v2.md",
+        "bytes":  2616,
+        "preview":  "# Implementation Plan - Project Reorganization (Standard Src-Layout) This plan moves the project from a fragmented structure to a **Standard Src-Layout**. This is the professional long-term fix for your import issues, ensuring that `import smlm_score` works consistently across WSL, Windows, and any future environments. ## User Review Required \u003e [!WARNING] \u003e - **Import Refactoring**: This is a significant change. We will need to update every file in `examples/` and `tests/` to use the new `smlm_score.\u003cpackage\u003e` prefix (e.g., `from smlm_score.imp_modeling import ...`)."
+    },
+    {
+        "date":  "2026-04-10 14:37:41",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_reorg.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_reorg.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1437_task_reorg.md",
+        "bytes":  505,
+        "preview":  "# Task: Project Reorganization (Src-Layout) - `[x]` Step 1: Create new structure and move folders (User completed in WSL) - `[/]` Step 2: Update `pyproject.toml` for src-layout - `[ ]` Step 3: Refactor import statements - `[ ]` Update `src/smlm_score/` internal imports - `[ ]` Update `examples/` imports - `[ ]` Update `tests/` imports"
+    },
+    {
+        "date":  "2026-04-10 14:48:27",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_reorg.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_reorg.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1448_walkthrough_reorg.md",
+        "bytes":  2316,
+        "preview":  "# Walkthrough - Infrastructure Upgrade \u0026 Reorganization We have successfully migrated the SMLM-IMP environment to a native Linux workflow via **WSL2** and reorganized the project structure for professional long-term stability. ## Key Accomplishments ### 1. Robust WSL2 Environment - **Native Linker**: The fragile Windows `conda-pack` (with hardcoded DLL paths) has been replaced by a native Linux build using `conda-forge`."
+    },
+    {
+        "date":  "2026-04-10 15:00:17",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "guide_tools_wsl.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\guide_tools_wsl.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1500_guide_tools_wsl.md",
+        "bytes":  2709,
+        "preview":  "# Guide: Configuring Your Tools for WSL2 This guide ensures that **PyCharm** and **Antigravity** are correctly synced with your new WSL-native project structure. ## 1. PyCharm Professional Setup (Standard) PyCharm Pro has excellent built-in support for WSL. Follow these steps to set the \"Master\" interpreter: "
+    },
+    {
+        "date":  "2026-04-10 16:50:14",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_environment_fix.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_environment_fix.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1650_implementation_plan_environment_fix.md",
+        "bytes":  3931,
+        "preview":  "# Implementation Plan â€” Environment Stabilization (Optimized) The audit found **60 missing packages** and **70+ version mismatches** between your Windows baseline and WSL. However, the vast majority are harmless. This plan triages them into actionable categories and provides a single, precise execution sequence. ## Triage Summary | Category | Count | Action | |:---|:---:|:---|"
+    },
+    {
+        "date":  "2026-04-10 17:59:56",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_final_migration.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_final_migration.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-10_1759_walkthrough_final_migration.md",
+        "bytes":  2675,
+        "preview":  "# Walkthrough - Infrastructure Migration \u0026 Reorganization Complete (Verified) We have successfully completed a full transformation of your SMLM-IMP development environment. ## Final State Overview ### 1. High-Performance WSL2 Backend - **NVIDIA GPU Support**: Confirmed **CUDA is True**. Your Quadro T500 is now accelerating your Numba kernels inside WSL2."
+    },
+    {
+        "date":  "2026-04-11 14:58:08",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_sync_strategy.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_sync_strategy.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-11_1458_implementation_plan_sync_strategy.md",
+        "bytes":  2062,
+        "preview":  "# Implementation Plan: Repository Alignment \u0026 Autosync Strategy The goal is to resolve the version discrepancy between the WSL development environment and the Windows OneDrive tracking copy, and provide a convenient way to keep them in sync. ## User Review Required \u003e [!IMPORTANT] \u003e **Source of Truth**: I am treating the WSL directory (`~/Thesis/smlm_score`) as the master copy, as it houses your active conda environment and GPU-integrated modeling tools. The Windows folder will be a mirror."
+    },
+    {
+        "date":  "2026-04-12 19:16:58",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_eman2.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_eman2.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_1916_implementation_plan_eman2.md",
+        "bytes":  9019,
+        "preview":  "# EMAN2 Neural Network Particle Picking â€” HDBSCAN Replacement ## Background The current pipeline uses HDBSCAN (in [data_handling.py](file:///c:/Users/User/OneDrive/Desktop/Thesis/smlm_score/src/smlm_score/utility/data_handling.py#L215-L359)) to isolate individual NPC clusters from SMLM point clouds. While HDBSCAN works, it: - Struggles with dense background noise (produces many small \"noise clusters\") - Requires a secondary geometric merging step (AgglomerativeClustering) to reassemble fragmented NPCs - Has no concept of what an NPC actually *looks like* â€” it only uses point density"
+    },
+    {
+        "date":  "2026-04-12 20:15:35",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_eman2.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_eman2.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_2015_walkthrough_eman2.md",
+        "bytes":  4245,
+        "preview":  "# Walkthrough: EMAN2 Particle Picking Integration I have successfully implemented the technical infrastructure for using EMAN2\u0027s neural network particle picker as a substitute for HDBSCAN in your SMLM-IMP pipeline. ## ðŸš€ Accomplishments - **Environment Setup**: Verified your existing `eman2` conda environment and installed `mrcfile` for data exchange. - **Rendering Pipeline**: Created [smlm_to_mrc.py](file:///c:/Users/User/OneDrive/Desktop/Thesis/smlm_score/examples/smlm_to_mrc.py) which renders your 20,000nm point clouds into a 2D density map ([micrograph.mrc](file:///c:/Users/User/OneDrive/Desktop/Thesis/smlm_score/examples/micrograph.mrc))."
+    },
+    {
+        "date":  "2026-04-12 21:31:21",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_eman2.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_eman2.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_2131_task_eman2.md",
+        "bytes":  1205,
+        "preview":  "- [x] **Phase 1: WSLg GUI Setup** - [x] Install X11 apps and Mesa utilities - [x] Verify GUI works with `xcalc` - [x] **Phase 2: Environment Preparation** - [x] `pip install mrcfile` in `smlm` environment - [x] `pip install mrcfile` in `eman2` environment - [x] **Phase 3: SMLM to Micrograph Translation** - [x] Create `examples/smlm_to_mrc.py`"
+    },
+    {
+        "date":  "2026-04-12 22:33:32",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_tree_speed.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_tree_speed.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_2233_implementation_plan_tree_speed.md",
+        "bytes":  6610,
+        "preview":  "# Accelerate Tree Score: Numba Vectorization ## Problem The Tree scorer (`computescoretree` / `computescoretree_with_grad`) is the slowest scoring function in the pipeline. The root cause is a **pure-Python double loop** iterating over ~1,000 data points Ã— 8 model points per evaluation: ```python # tree_score.py, line 180"
+    },
+    {
+        "date":  "2026-04-12 22:39:48",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_tree_speed.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_tree_speed.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_2239_task_tree_speed.md",
+        "bytes":  565,
+        "preview":  "- [ ] Prepare `tree_score.py` for Numba acceleration - [ ] Add `_compute_tree_score_numba` JIT kernel - [ ] Add `_compute_tree_score_and_grad_numba` JIT kernel - [ ] Refactor `computescoretree` to use CSR-style flat index arrays - [ ] Refactor `computescoretree_with_grad` to use CSR-style flat index arrays - [ ] Update `benchmark_scoring.py` with Numba warmup - [ ] Verification - [ ] Synchronize changes to WSL"
+    },
+    {
+        "date":  "2026-04-12 23:04:52",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_master_benchmark.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_master_benchmark.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-12_2304_implementation_plan_master_benchmark.md",
+        "bytes":  2494,
+        "preview":  "# Master Benchmarking Suite (Refined Figures A-E) ## Problem The initial master benchmark needs specific refinements for professional thesis use, including dual-theme support (Light/Dark), better legend consistency for stacked benchmarks, and adjusted layout for readability. ## Refined Figure Requirements | Figure | Requirement | Description |"
+    },
+    {
+        "date":  "2026-04-13 22:57:41",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_master_benchmark.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_master_benchmark.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-13_2257_task_master_benchmark.md",
+        "bytes":  885,
+        "preview":  "- [x] Prepare `master_benchmark.py` infrastructure - [x] Implement dual-theme (Dark/Light) controller - [x] Implement synthetic data generator - [x] Implement Numba warmup routine - [x] Core Benchmarking Routines - [x] Scaling Sweep (Fig A) - [x] Initialization/MCMC Tradeoff (Fig B) - [x] GMM Selection Cost (Fig C)"
+    },
+    {
+        "date":  "2026-04-14 00:42:48",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_coord_logging.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_coord_logging.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-14_0042_implementation_plan_coord_logging.md",
+        "bytes":  3922,
+        "preview":  "# Per-Step Coordinate Logging for All Optimization Modes ## Goal Add temporary per-step coordinate printing to all three optimization modes (Frequentist, Bayesian/REMC, Brownian) so we can verify that the IMP optimizers are actually moving the model particles. Once verified, the logging will be removed. ## Proposed Changes ---"
+    },
+    {
+        "date":  "2026-04-14 00:44:54",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_coord_logging.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_coord_logging.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-14_0044_task_coord_logging.md",
+        "bytes":  494,
+        "preview":  "- [/] Implement Temporary Logging - [ ] Update `frequentist_optimizer.py` (CG Step-by-Step) - [ ] Update `mcmc_sampler.py` (REMC Frame Monitoring) - [ ] Update `simulation_setup.py` (BD Step-by-Step) - [ ] Verification Runs - [ ] Run Frequentist mode \u0026 check logs - [ ] Run Bayesian mode \u0026 check logs - [ ] Run Brownian mode \u0026 check logs"
+    },
+    {
+        "date":  "2026-04-14 23:30:20",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_imp_analysis.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_imp_analysis.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-14_2330_implementation_plan_imp_analysis.md",
+        "bytes":  2844,
+        "preview":  "# Implementation Plan - IMP Repository Analysis This plan outlines a systematic analysis of the **Integrative Modeling Platform (IMP)** repository. The goal is to provide a deep architectural and functional understanding of the framework to support the user\u0027s thesis and optimize the ongoing SMLM-IMP modeling work. ## User Review Required \u003e [!IMPORTANT] \u003e The IMP repository is vast (over 50 modules). This analysis will prioritize the components most relevant to the current project: `pmi`, `rmf`, and `bff`. Please let me know if you would like me to include other specific areas (e.g., `em`, `bayesianem`, or `saxs`)."
+    },
+    {
+        "date":  "2026-04-14 23:32:05",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_imp_analysis.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_imp_analysis.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-14_2332_task_imp_analysis.md",
+        "bytes":  1432,
+        "preview":  "# Task: IMP Repository Analysis for SMLM-IMP Thesis Analysis of the IMP framework focusing on the Model representation, Restraint system, and Sampling/Simulation engines (REMC \u0026 BD). - `[ ]` **Phase 1: Model Representation \u0026 Hierarchies** - `[ ]` Analyze `kernel::Model` and `kernel::Particle` abstractions. - `[ ]` Map the \"Decorator\" system (`XYZ`, `Mass`, `Hierarchy`). - `[ ]` Document how multiscale hierarchies are structured for NPC models."
+    },
+    {
+        "date":  "2026-04-14 23:34:38",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "imp_architectural_analysis.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\imp_architectural_analysis.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-14_2334_imp_architectural_analysis.md",
+        "bytes":  4851,
+        "preview":  "# Architectural Analysis: Integrative Modeling Platform (IMP) This report provides a formal analysis of the **Integrative Modeling Platform (IMP)** repository, specifically focusing on the architectural components relevant to the **SMLM-IMP** thesis. --- ## 1. Structural Representation: The Model \u0026 Particle Engine "
+    },
+    {
+        "date":  "2026-04-15 19:48:49",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_imp_analysis_consequences.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_imp_analysis_consequences.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-15_1948_implementation_plan_imp_analysis_consequences.md",
+        "bytes":  5188,
+        "preview":  "# Revised Implementation Plan: REMC Acceptance Rate Fix ## Summary of the Problem From the last run\u0027s `frame_scores.csv`, we observe: - Scores: `4493.6 â†’ 4491.2 â†’ 4487.7` over 20 frames - Acceptance rate: **1.0%** (only 2 moves accepted out of ~200 proposals) - Temperature: constant `1.0` across all frames"
+    },
+    {
+        "date":  "2026-04-15 21:20:06",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_remc_improvements.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_remc_improvements.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-15_2120_walkthrough_remc_improvements.md",
+        "bytes":  2782,
+        "preview":  "# Walkthrough - Bayesian Sampling Optimizations I have implemented the requested enhancements to the Bayesian (REMC) modeling pipeline to improve sampling efficiency and user feedback. ## Changes Made ### 1. Configuration \u0026 Parameter Exposure - **[pipeline_config.json](file:///c:/Users/User/OneDrive/Desktop/Thesis/smlm_score/examples/pipeline_config.json)**:"
+    },
+    {
+        "date":  "2026-04-15 21:20:11",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_remc_improvements.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_remc_improvements.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-15_2120_task_remc_improvements.md",
+        "bytes":  845,
+        "preview":  "# Task: REMC Performance \u0026 Configuration Improvements Improve Bayesian sampling efficiency by implementing score scaling and exposing rigid body move parameters. - `[x]` **Phase 1: Configuration Updates** - `[x]` Add `score_weight`, `max_rb_trans`, `max_rb_rot` to `pipeline_config.json`. - `[x]` Increase sampling depth (`number_of_frames`, `monte_carlo_steps`) in `pipeline_config.json`. - `[x]` **Phase 2: Logic Implementation**"
+    },
+    {
+        "date":  "2026-04-15 21:31:49",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_maintenance_sync.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_maintenance_sync.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-15_2131_implementation_plan_maintenance_sync.md",
+        "bytes":  2498,
+        "preview":  "# Implementation Plan - Project Maintenance and Synchronization This plan outlines the steps to finalize the current project state, update documentation, push to GitHub, and ensure all local versions (Windows and WSL) are perfectly synchronized. ## User Review Required \u003e [!IMPORTANT] \u003e **Source of Truth**: I will treat the Windows Desktop workspace (`c:\\Users\\User\\OneDrive\\Desktop\\Thesis\\smlm_score`) as the primary source of truth for code and documentation. Transient data (like EMAN2 logs) in WSL will be ignored or overwritten to match the Windows state."
+    },
+    {
+        "date":  "2026-04-15 22:55:41",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_rmf_fix.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_rmf_fix.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-15_2255_implementation_plan_rmf_fix.md",
+        "bytes":  2844,
+        "preview":  "# Implementation Plan - Fixing Frozen RMF Trajectory The user reported that the sampling trajectory appears frozen in Chimera, even though the internal scores and statistics indicate active sampling. Analysis revealed that while the REMC sampler is moving particles, the structural hierarchy (the protein) is not linked to these movers, and the AV particles are not properly integrated into the visible RMF hierarchy. ## User Review Required \u003e [!IMPORTANT] \u003e **Structural Integrity**: I will modify the rigid body setup to include the **entire protein complex** along with the AVs. This ensures that when the sampler searches for a better fit, the protein moves in unison with the fluorophore attachment sites (AVs)."
+    },
+    {
+        "date":  "2026-04-16 19:17:11",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_rmf_fix.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_rmf_fix.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_1917_walkthrough_rmf_fix.md",
+        "bytes":  2314,
+        "preview":  "# Walkthrough - Bayesian SMLM Trajectory Fix Successfully resolved the critical issue where Bayesian sampling produced \"frozen\" RMF trajectories. The fix ensures that both the fluorophore attachment points (AVs) and the entire protein structure move as a unified rigid body, and that these movements are correctly recorded for visualization. ## Changes Made ### 1. Unified Rigid Body Sampling In `src/smlm_score/imp_modeling/simulation/mcmc_sampler.py`, I updated the rigid body creation to include both the AV particles and the entire downsampled protein hierarchy. "
+    },
+    {
+        "date":  "2026-04-16 22:14:32",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_finalization_safety.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_finalization_safety.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2214_implementation_plan_finalization_safety.md",
+        "bytes":  3145,
+        "preview":  "# Implementation Plan - Finalization \u0026 Data Safety Ensure the long-term safety of model/data inputs, update all manuals with the new EMAN2 and RMF features, and perform a final, synchronized push across all environments. ## User Review Required \u003e [!IMPORTANT] \u003e **Source of Truth Policy**: I will continue to treat the Windows Desktop workspace as the primary source of truth for code and documentation. However, I will implement \"Safe Sync\" rules to ensure that unique data in WSL (like EMAN2 picking results) is never deleted."
+    },
+    {
+        "date":  "2026-04-16 22:24:34",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_finalization.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_finalization.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2224_task_finalization.md",
+        "bytes":  812,
+        "preview":  "# Task: Finalization \u0026 Data Safety Finalize the project state, protect critical data, and ensure all environments are synchronized and documented. - `[x]` **Phase 1: Data Safety Hardening** - `[x]` Update `.gitignore` with protected data sections. - `[x]` Create `safe_sync.sh` utility script. - `[x]` **Phase 2: Documentation \u0026 Manuals**"
+    },
+    {
+        "date":  "2026-04-16 22:24:42",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_finalization.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_finalization.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2224_walkthrough_finalization.md",
+        "bytes":  2589,
+        "preview":  "# Walkthrough - Pipeline Restoration \u0026 Finalization The Bayesian SMLM modeling pipeline is now fully restored, safety-hardened, and synchronized across all environments. All 96 integration and unit tests pass on the Windows \"Source of Truth\" workspace. ## Key Accomplishments ### 1. Data Safety \u0026 Protection - **Hardened `.gitignore`**: Added a dedicated `PROTECTED DATA` section. Critical directories like `info/` and `picked_particles/` are now explicitly ignored to prevent accidental commitment or deletion during synchronization."
+    },
+    {
+        "date":  "2026-04-16 22:43:03",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "validation_analysis.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\validation_analysis.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2243_validation_analysis.md",
+        "bytes":  7649,
+        "preview":  "# Validation Stage Analysis ## What the Current Validation Does The validation module (`validation.py`) performs two tests: ### Test 1: Separation Test (`validate_scoring_separation`) - Scores the **target NPC cluster** (labeled \"Valid\") and a handful of small **noise clusters** (10â€“100 points) with all three scoring engines."
+    },
+    {
+        "date":  "2026-04-16 22:59:04",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_validation.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_validation.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2259_implementation_plan_validation.md",
+        "bytes":  2205,
+        "preview":  "# Implementation Plan: Cross-Validated NPC Validation (Strategy B) ## Goal Replace the weak noise-cluster comparison with a statistically principled cross-validation that tests whether scoring functions are sensitive to NPC ring geometry. Remove the redundant Distance separation test. ## Proposed Changes ### 1. Validation Module"
+    },
+    {
+        "date":  "2026-04-16 23:07:21",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_validation.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_validation.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2307_task_validation.md",
+        "bytes":  850,
+        "preview":  "# Task: Cross-Validated NPC Validation (Strategy B) Implement a robust structural validation stage that tests whether scoring functions are sensitive to NPC ring geometry using angular splitting and scrambled null controls. - `[x]` **Phase 1: Validation Module Enhancement** - `[x]` Implement `validate_cross_validated_npc` in `validation.py`. - `[x]` Update `run_full_validation` to handle cross-validation data. - `[x]` **Phase 2: Pipeline Integration**"
+    },
+    {
+        "date":  "2026-04-16 23:07:36",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_validation.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_validation.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2307_walkthrough_validation.md",
+        "bytes":  2150,
+        "preview":  "# Walkthrough: Structural Validation (Strategy B) I have implemented a statistically rigorous structural validation stage that replaces simple noise-cluster comparisons with principled cross-validation. ## Key Changes ### 1. Structural Cross-Validation Implemented `validate_cross_validated_npc` in `validation.py`."
+    },
+    {
+        "date":  "2026-04-16 23:48:51",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_sync_maintenance.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_sync_maintenance.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2348_implementation_plan_sync_maintenance.md",
+        "bytes":  1691,
+        "preview":  "# Implementation Plan: Versioning and Safe Sync ## Goal Safely commit the validated Strategy B implementation, push to GitHub, and synchronize the Windows workspace with the WSL environment using the `safe_sync.sh` utility. ## Safety Checks [MANDATORY] \u003e [!IMPORTANT] \u003e - **Data Protection**: Verified that `.gitignore` correctly ignores `ShareLoc_Data/`, `PDB_Data/`, and `bayesian_cluster_*/` result folders."
+    },
+    {
+        "date":  "2026-04-16 23:50:24",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_sync_maintenance.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_sync_maintenance.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2350_task_sync_maintenance.md",
+        "bytes":  428,
+        "preview":  "# Task: Safe Versioning and Synchronization Versioning and syncing Strategy B structural validation changes to GitHub and WSL, following safety protocols. - `[x]` **Phase 1: Git Versioning** - `[x]` Stage and commit validated code and tests. - `[x]` Push changes to GitHub. - `[x]` **Phase 2: Environment Sync**"
+    },
+    {
+        "date":  "2026-04-16 23:50:29",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_sync_maintenance.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_sync_maintenance.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-16_2350_walkthrough_sync_maintenance.md",
+        "bytes":  1516,
+        "preview":  "# Walkthrough: Safe Versioning and Sync I have successfully versioned the Strategy B implementation and synchronized the workspace with your WSL environment, adhering to all safety protocols. ## Version Control (GitHub) I staged and committed the core implementation files and unit tests: - `src/smlm_score/validation/validation.py` (Strategy B logic) - `examples/NPC_example_BD.py` (Pipeline integration)"
+    },
+    {
+        "date":  "2026-04-17 22:06:11",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_tech_debt.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_tech_debt.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-17_2206_implementation_plan_tech_debt.md",
+        "bytes":  3529,
+        "preview":  "# Implementation Plan: Addressing Technical Debt \u0026 Pipeline Correctness This plan addresses recent feedback, focusing on critical path-resolution bugs (causing PyCharm execution failures), pipeline correctness flaws (`P0`), and structural refactoring (`P1`). *Note regarding the German assessment: Many of the architectural limitations mentioned in that text (missing particle segmentation, missing rigid body optimization, Numba compiler crashes) have already been successfully resolved in our recent pipeline upgrades (e.g., EMAN2 boxing, Kabsch alignment, Bayesian sampling). The remaining relevant points are covered here.* ## Phase 1: P0 Correctness \u0026 Environment Fixes (Immediate) "
+    },
+    {
+        "date":  "2026-04-17 23:16:59",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "task_tech_debt.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\task_tech_debt.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-17_2316_task_tech_debt.md",
+        "bytes":  1001,
+        "preview":  "# Task: Addressing Technical Debt \u0026 Pipeline Correctness Implement critical P0 bug fixes and P1 refactoring to ensure pipeline stability and alignment with documentation. - `[x]` **Phase 1: P0 Correctness \u0026 Environment Fixes** - `[x]` Fix path resolution in `examples/NPC_example_BD.py` using `pathlib`. - `[x]` Fix held-out validation variable definitions in `examples/NPC_example_BD.py`. - `[x]` Gate Bayesian sampling with `RUN_BAYESIAN_SAMPLING` flag."
+    },
+    {
+        "date":  "2026-04-18 00:27:17",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "validation_output_analysis.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\validation_output_analysis.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-18_0027_validation_output_analysis.md",
+        "bytes":  2920,
+        "preview":  "# Analysis of SMLM-IMP Validation Outputs You asked why certain tests were missing, why the map was filtered, and where the 200 REMC sampling steps went. **The mathematical and structural flow of the code did not change during the refactoring.** The differences between the old terminal output you remember and the recent run are entirely determined by the `pipeline_config.json` configuration driving the pipeline. ### 1. \"Why filtered? We introduced full map before?\" The pipeline is correctly responding to the current state of `examples/pipeline_config.json`. In your config file, the filtering mode is explicitly set to `\"random\"`:"
+    },
+    {
+        "date":  "2026-04-18 19:35:09",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "walkthrough_stabilization.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\walkthrough_stabilization.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-18_1935_walkthrough_stabilization.md",
+        "bytes":  2854,
+        "preview":  "# SMLM-IMP Pipeline Stabilization Walkthrough We have successfully stabilized and modularized the SMLM-IMP modeling pipeline. By transitioning to a modular architecture, we improved code maintainability while strictly preserving every diagnostic and \"smart fallback\" feature from the original monolithic script. ## ðŸš€ Final Pipeline Architecture The pipeline in [NPC_example_BD.py](file:///\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\examples\\NPC_example_BD.py) now orchestrates several distinct phases: "
+    },
+    {
+        "date":  "2026-04-18 20:28:56",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_unbound_fix.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_unbound_fix.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-18_2028_implementation_plan_unbound_fix.md",
+        "bytes":  9415,
+        "preview":  "# Pipeline Stabilization: Final Plan ## Background \u0026 Git History Analysis I traced the evolution of the Bayesian score weight across all 4 commits in the repository: ### Commit 0 (`0121c2b` â€” \"docs: README, examples\") - **No `score_weight` in config.** The `run_bayesian_sampling` call passed no weight argument."
+    },
+    {
+        "date":  "2026-04-19 16:20:03",
+        "folder":  "b1a292b5-a57e-404a-9e85-470fcd3ba26a",
+        "name":  "implementation_plan_gmm_mixture.md",
+        "source_path":  "C:\\Users\\User\\OneDrive\\Desktop\\brain\\b1a292b5-a57e-404a-9e85-470fcd3ba26a\\implementation_plan_gmm_mixture.md",
+        "corpus_path":  "\\\\wsl.localhost\\Ubuntu\\home\\daniel\\Thesis\\smlm_score\\docs\\brain_ai_corpus\\artifacts\\b1a292b5-a57e-404a-9e85-470fcd3ba26a_2026-04-19_1620_implementation_plan_gmm_mixture.md",
+        "bytes":  4539,
+        "preview":  "# Fix GMM Mixture Likelihood (Minimal Cleanup) This plan details the implementation of the \"Minimal mathematical cleanup\" strategy for the GMM scoring engine. This addresses the issues identified where the current score is an asymmetric sum of pairwise log-overlaps rather than a true probabilistic mixture comparison. ## Goal Description The objective is to change the core GMM score evaluation from: `S_current = sum_j sum_k log( pi_k * N(x_j | mu_k, Sigma_k + Sigma_M) )` *(Currently implemented as an outer loop over data components `k` and inner loop over model points `j`, summing independent log-likelihoods)*"
+    }
+]

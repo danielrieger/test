@@ -26,13 +26,10 @@ $$ \mathcal{S}_{GMM} = \sum_{j \in M} \ln \left( \sum_{k \in G_D} \pi_k \mathcal
 - **Asymmetry**: Unlike a true symmetric overlap integral, the current code evaluates model points against the data GMM components.
 
 ## 3. Heuristic Assumptions
-
 The following parameters are currently set to fixed "expert" values based on the bachelor thesis findings:
-- **$\sigma_{av} = 8.0$**: Representing the isotropic variance of the Accessible Volume (AV) positions. 
+- **$\sigma_{av} = 8.0 \text{ \AA}$**: Representing the fixed standard deviation of the Accessible Volume (AV) positions.
 - **Amplitude-to-Variance**: Data precision $\sigma_D$ is estimated from the localization amplitude $A$ as $\sigma_D \approx 1/\sqrt{A}$.
-- **Unit Consistency**: Internal scoring typically operates in **nanometers (nm)** when using the default pipeline scaling (0.1). 
+- **Unit Consistency**: Internal scoring typically operates in Ångstroms, while input data is often in nanometers. The pipeline handles this conversion in the `ScoringRestraintWrapper` scaling parameter (default $0.1$).
 
-> [!CAUTION]
-> **Heuristic Inconsistency Detected**: 
-> In the current implementation, `sigma_av` is hardcoded to `8.0`. In the standard pipeline where coordinates are scaled to nanometers (nm), this value represents **8.0 nm** (80 Å). If your intended heuristic was **8.0 Å**, you should set this value to `0.8` in the source code or use Ångstroms as your primary coordinate system.
-
+> [!WARNING]
+> The `sigma_av` value is a heuristic. Future iterations should derive this value from the specific AV linker lengths and radii defined in `av_parameter.json`.
