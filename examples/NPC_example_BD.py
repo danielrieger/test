@@ -62,9 +62,9 @@ def load_config(config_file="pipeline_config.json"):
     cm = config["clustering"].get("method", "hdbscan")
     
     if mode == "frequentist" and config["optimization"]["frequentist"]["scoring_type"] == "GMM":
-        print("Warning: frequentist optimization does not support GMM scoring. CG will be skipped.")
+        pass  # Previously unsupported, now fully supported!
     if mode == "brownian" and config["optimization"]["brownian"]["scoring_type"] == "GMM":
-        print("Warning: Brownian dynamics does not support GMM scoring. BD will be skipped.")
+        pass  # Previously unsupported, now fully supported!
         
     print(f"Scoring types to test: {st}")
     print(f"Optimization mode:     {mode}")
@@ -165,7 +165,12 @@ def run_evaluation(m, pdb_h, avs, res, coords, variances, config):
                 sr = ScoringRestraintWrapper(m, avs, kdtree_obj=KDTree(aligned_pts), dataxyz=aligned_pts, var=vars_, type=ST, model_coords_override=model_aligned, searchradius=50.0)
             elif ST == "GMM" and len(aligned_pts) > 2:
                 _, gmm, mu, cov, w = test_gmm_components(aligned_pts)
-                sr = ScoringRestraintWrapper(m, avs, gmm_sel_components=gmm.n_components, gmm_sel_mean=mu, gmm_sel_cov=cov, gmm_sel_weight=w, type=ST, model_coords_override=model_aligned)
+                sr = ScoringRestraintWrapper(
+                    m, avs, gmm_sel_components=gmm.n_components, 
+                    gmm_sel_mean=mu, gmm_sel_cov=cov, gmm_sel_weight=w, type=ST, 
+                    model_coords_override=model_aligned, 
+                    model_variance=config.get("optimization", {}).get("model_variance", 8.0)
+                )
             elif ST == "Distance":
                 cl = [np.eye(3)*max(v, 1e-9) for v in vars_] if vars_ is not None else None
                 sr = ScoringRestraintWrapper(m, avs, dataxyz=aligned_pts, var=cl, type=ST, model_coords_override=model_aligned)
@@ -205,29 +210,25 @@ def trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts):
         return True
     
     if mode == "frequentist" and ST == opt["frequentist"]["scoring_type"]:
-        if ST != "GMM":
-            print(f"  [Frequentist] Triggering CG optimization for cluster {cid}...")
-            run_frequentist_optimization(m, pdb_h, avs, sr, f"frequentist_cluster_{cid}", opt["frequentist"]["max_cg_steps"])
-            return True
-        print("  [Frequentist] Skipping: GMM not supported for CG.")
+        print(f"  [Frequentist] Triggering CG optimization for cluster {cid}...")
+        run_frequentist_optimization(m, pdb_h, avs, sr, f"frequentist_cluster_{cid}", opt["frequentist"]["max_cg_steps"])
+        return True
         
     if mode == "brownian" and ST == opt["brownian"]["scoring_type"]:
-        if ST != "GMM":
-            print(f"  [Brownian] Triggering BD simulation for cluster {cid}...")
-            b = opt["brownian"]
-            run_brownian_dynamics_simulation(
-                m, pdb_h, avs, sr, 
-                output_dir=f"brownian_cluster_{cid}", 
-                temperature=b["temperature_k"], 
-                max_time_step_fs=b["max_time_step_fs"], 
-                number_of_bd_steps=b["number_of_bd_steps"], 
-                rmf_save_interval_frames=b["rmf_save_interval"]
-            )
-            return True
-        print("  [Brownian] Skipping: GMM not supported for BD.")
+        print(f"  [Brownian] Triggering BD simulation for cluster {cid}...")
+        b = opt["brownian"]
+        run_brownian_dynamics_simulation(
+            m, pdb_h, avs, sr, 
+            output_dir=f"brownian_cluster_{cid}", 
+            temperature=b["temperature_k"], 
+            max_time_step_fs=b["max_time_step_fs"], 
+            number_of_bd_steps=b["number_of_bd_steps"], 
+            rmf_save_interval_frames=b["rmf_save_interval"]
+        )
+        return True
     return False
 
-def run_held_out(m, avs, df, cuts, target_s, target_n, test_types, model_baseline):
+def run_held_out(m, avs, df, cuts, target_s, target_n, test_types, model_baseline, config):
     """Run cross-validation against held-out data chunks."""
     ho_xyz, ho_var = get_held_out_complement(df, x_cut=cuts['x'], y_cut=cuts['y'], z_cut=cuts['z'], n_samples=200)
     results = {}
@@ -245,7 +246,12 @@ def run_held_out(m, avs, df, cuts, target_s, target_n, test_types, model_baselin
                     if ST == "Tree": sr = ScoringRestraintWrapper(m, avs, kdtree_obj=KDTree(c_xyz_c), dataxyz=c_xyz_c, var=c_var, type=ST, model_coords_override=model_baseline)
                     elif ST == "GMM":
                         _, gmm, mu, cov, w = test_gmm_components(c_xyz_c.astype(np.float64), reg_covar=1e-4)
-                        sr = ScoringRestraintWrapper(m, avs, gmm_sel_components=gmm.n_components, gmm_sel_mean=mu, gmm_sel_cov=cov, gmm_sel_weight=w, type=ST, model_coords_override=model_baseline)
+                        sr = ScoringRestraintWrapper(
+                            m, avs, gmm_sel_components=gmm.n_components, 
+                            gmm_sel_mean=mu, gmm_sel_cov=cov, gmm_sel_weight=w, type=ST, 
+                            model_coords_override=model_baseline,
+                            model_variance=config.get("optimization", {}).get("model_variance", 8.0)
+                        )
                     elif ST == "Distance":
                         cl = [np.eye(3)*max(v,1e-9) for v in c_var]
                         sr = ScoringRestraintWrapper(m, avs, dataxyz=c_xyz_c, var=cl, type=ST, model_coords_override=model_baseline)
@@ -301,7 +307,7 @@ def main():
     scores, cv_data, t_s, t_n, m_base = run_evaluation(m, pdb_h, avs, res, coords, vars_, config)
 
     # Validation
-    ho_results = run_held_out(m, avs, df, cuts, t_s, t_n, config["execution"]["test_scoring_types"], m_base)
+    ho_results = run_held_out(m, avs, df, cuts, t_s, t_n, config["execution"]["test_scoring_types"], m_base, config)
     
     print("\n=== CLUSTER SCORING SUMMARY ===")
     print("ID   | Type  | N_pts |  Tree Score       | GMM Score      | Distance Score")

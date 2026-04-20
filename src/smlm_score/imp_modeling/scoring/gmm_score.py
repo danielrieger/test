@@ -102,6 +102,7 @@ def compute_score_GMM(
         data_mean: np.ndarray,
         data_cov: np.ndarray = None,
         data_weight: np.ndarray = None,
+        model_variance: float = 8.0,
         offset_xyz: np.ndarray = None
 ):
     """Extract AV coordinates and evaluate GMM log-likelihood.
@@ -116,6 +117,8 @@ def compute_score_GMM(
         GMM component covariances.
     data_weight : np.ndarray, shape (K,)
         GMM component weights.
+    model_variance : float
+        Spatial variance applied to model points.
     offset_xyz : np.ndarray or None
         Optional translation offset applied to model coordinates.
 
@@ -141,6 +144,7 @@ def compute_score_GMM(
         data_mean,
         data_cov,
         data_weight,
+        model_variance,
     )
 
     return score_total
@@ -151,79 +155,132 @@ def compute_score_GMM(
 # alignment), not inside this Numba function. The offset_xyz parameter is kept for
 # backward compatibility but the preferred workflow is pre-aligned data.
 @jit(nopython=True, fastmath=True)
-def _compute_nb_gmm_cpu(
+def _compute_nb_gmm_and_grad_cpu(
         model_xyzs,
         data_mean,
         data_cov,
         data_weight,
+        model_variance,
         offset_xyz=None
 ):
-    """Numba JIT CPU kernel for GMM log-likelihood (Bonomi et al. 2019).
+    """Numba JIT CPU kernel for Point-Cloud Likelihood (ISD/Habeck 2017).
 
-    Computes the sum of log-probabilities over all model-data pairs using
-    the combined covariance Sigma = Sigma_data + Sigma_model.
-
-    Parameters
-    ----------
-    model_xyzs : np.ndarray, shape (M, 3)
-        Model coordinates.
-    data_mean : np.ndarray, shape (K, 3)
-        GMM component means.
-    data_cov : np.ndarray, shape (K, 3, 3)
-        GMM component covariances.
-    data_weight : np.ndarray, shape (K,)
-        GMM component weights.
-    offset_xyz : np.ndarray or None
-        Optional offset applied to model coordinates.
+    Computes the log-sum-exp of mixture probabilities over data components for each model point,
+    as well as the analytical gradient with respect to model point coordinates.
 
     Returns
     -------
-    float
-        Total log-likelihood score.
+    tuple
+        (float score_total, np.ndarray grad of shape (M, 3))
     """
     score_total = 0.0
 
-    # Offset when out of area
     if offset_xyz is not None:
-        model_xyzs = model_xyzs + offset_xyz  # Use + instead of += to avoid mutating input
+        model_xyzs = model_xyzs + offset_xyz
 
-    # placeholder for AV covariance (instantiated outside loop for numba efficiency)
-    sigma_av = 8.0
-    sigma_M = np.eye(3, dtype=np.float64) * sigma_av
+    sigma_M = np.eye(3, dtype=np.float64) * model_variance
     weight_M = 1.0
 
-    # Data loop (Outer loop to match data-driven GMM components)
-    for i in range(len(data_mean)):
-        mean_D = data_mean[i]
-        sigma_D = data_cov[i]
-        weight_D = data_weight[i]
+    n_data = len(data_mean)
+    n_models = len(model_xyzs)
+    
+    grad = np.zeros((n_models, 3), dtype=np.float64)
 
-        Sigma = sigma_D + sigma_M  # Bonomi et al. 2019, Bayesian EM eq. 12
+    # Precompute inverses and prefactors
+    inv_Sigmas = np.zeros((n_data, 3, 3), dtype=np.float64)
+    log_prefactors = np.zeros(n_data, dtype=np.float64)
 
-        # Precompute values that are constant for this GMM component
-        prefactor = (weight_M * weight_D) / ((2. * np.pi) ** (3. / 2.) * np.linalg.det(Sigma) ** 0.5)
-        inv_Sigma = np.linalg.inv(Sigma)
-        log_prefactor = np.log(prefactor)
+    for i in range(n_data):
+        Sigma = data_cov[i] + sigma_M
+        det_S = np.linalg.det(Sigma)
+        inv_Sigmas[i] = np.linalg.inv(Sigma)
+        prefactor = (weight_M * data_weight[i]) / (
+            (2. * np.pi) ** 1.5 * np.abs(det_S) ** 0.5
+        )
+        if prefactor > 0:
+            log_prefactors[i] = np.log(prefactor)
+        else:
+            log_prefactors[i] = -np.inf
 
-        # Model loop
-        for m_idx in range(len(model_xyzs)):
-            model_xyz = model_xyzs[m_idx]
+    # Independent Mixture Loop: 
+    for m_idx in range(n_models):
+        mx = model_xyzs[m_idx, 0]
+        my = model_xyzs[m_idx, 1]
+        mz = model_xyzs[m_idx, 2]
 
-            diff = model_xyz - mean_D
-            # Explicit dot product for numba compatibility over '@'
-            exponent = -0.5 * np.dot(diff.T, np.dot(inv_Sigma, diff))
-            score_total += log_prefactor + exponent
+        max_lp = -np.inf
+        lps = np.zeros(n_data, dtype=np.float64)
 
-    return score_total
+        for i in range(n_data):
+            dx = mx - data_mean[i, 0]
+            dy = my - data_mean[i, 1]
+            dz = mz - data_mean[i, 2]
+
+            t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
+            t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
+            t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
+
+            exponent = -0.5 * (dx * t0 + dy * t1 + dz * t2)
+            lp = log_prefactors[i] + exponent
+            lps[i] = lp
+            if lp > max_lp:
+                max_lp = lp
+
+        sum_exp = 0.0
+        for i in range(n_data):
+            diff_lp = lps[i] - max_lp
+            if diff_lp > -80.0:
+                sum_exp += np.exp(diff_lp)
+
+        if sum_exp > 0:
+            log_sum = max_lp + np.log(sum_exp)
+            score_total += log_sum
+            
+            # Compute Gradient: sum_k gamma_k * -Sigma_k^{-1} (x_j - mu_k)
+            for i in range(n_data):
+                diff_lp = lps[i] - log_sum
+                if diff_lp > -80.0:
+                    gamma_k = np.exp(diff_lp)
+                    dx = mx - data_mean[i, 0]
+                    dy = my - data_mean[i, 1]
+                    dz = mz - data_mean[i, 2]
+
+                    t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
+                    t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
+                    t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
+
+                    grad[m_idx, 0] += gamma_k * (-t0)
+                    grad[m_idx, 1] += gamma_k * (-t1)
+                    grad[m_idx, 2] += gamma_k * (-t2)
+        else:
+            score_total += max_lp
+            # Gradient fallback if extreme log probability
+            for i in range(n_data):
+                if lps[i] == max_lp:
+                    dx = mx - data_mean[i, 0]
+                    dy = my - data_mean[i, 1]
+                    dz = mz - data_mean[i, 2]
+                    t0 = inv_Sigmas[i, 0, 0] * dx + inv_Sigmas[i, 0, 1] * dy + inv_Sigmas[i, 0, 2] * dz
+                    t1 = inv_Sigmas[i, 1, 0] * dx + inv_Sigmas[i, 1, 1] * dy + inv_Sigmas[i, 1, 2] * dz
+                    t2 = inv_Sigmas[i, 2, 0] * dx + inv_Sigmas[i, 2, 1] * dy + inv_Sigmas[i, 2, 2] * dz
+                    grad[m_idx, 0] += -t0
+                    grad[m_idx, 1] += -t1
+                    grad[m_idx, 2] += -t2
+                    break 
+
+    return score_total, grad
 
 
-def compute_nb_gmm(model_xyzs, data_mean, data_cov, data_weight, offset_xyz=None):
+def compute_nb_gmm_with_grad(model_xyzs, data_mean, data_cov, data_weight, model_variance=8.0, offset_xyz=None):
     """
-    Dispatcher: uses GPU kernel when CUDA is available and data is large enough,
-    otherwise falls back to CPU Numba JIT.
+    Dispatcher: uses GPU kernel (score only) when CUDA is available and data is large enough,
+    otherwise falls back to CPU Numba JIT (score and gradient).
+    NOTE: GPU gradient computation is not yet supported. If gradient is required, CPU is used.
     """
+    return _compute_nb_gmm_and_grad_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
+
+def compute_nb_gmm(model_xyzs, data_mean, data_cov, data_weight, model_variance=8.0, offset_xyz=None):
     if HAS_CUDA and len(data_mean) >= CUDA_MIN_DATA_SIZE:
-        return compute_nb_gmm_gpu(model_xyzs, data_mean, data_cov, data_weight,
-                                  offset_xyz=offset_xyz)
-    return _compute_nb_gmm_cpu(model_xyzs, data_mean, data_cov, data_weight,
-                               offset_xyz=offset_xyz)
+        return compute_nb_gmm_gpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
+    score, _ = _compute_nb_gmm_and_grad_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
+    return score

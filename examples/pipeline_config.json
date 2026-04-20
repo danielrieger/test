@@ -31,7 +31,7 @@
         }
     },
     "clustering": {
-        "method": "hdbscan",
+        "method": "eman2",
         "eman2_boxes": "info/micrograph_info.json",
         "pixel_map": "pixel_map.json",
         "perform_geometric_merging": false,
@@ -39,7 +39,8 @@
         "min_npc_points": 120
     },
     "optimization": {
-        "mode": "brownian",
+        "model_variance": 8.0,
+        "mode": "bayesian",
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",
@@ -50,7 +51,7 @@
             "max_rb_rot": 0.04
         },
         "frequentist": {
-            "scoring_type": "Tree",
+            "scoring_type": "GMM",
             "max_cg_steps": 200
         },
         "brownian": {

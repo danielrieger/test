@@ -29,16 +29,11 @@ def run_frequentist_optimization(
     print(f"  Scoring type: {scoring_restraint_wrapper.type}")
     print(f"  Max CG steps: {max_cg_steps}")
 
-    if scoring_restraint_wrapper.type == "GMM":
-        raise ValueError(
-            "GMM scoring does not support gradient-based optimization. "
-            "Use 'Tree' or 'Distance' scoring for frequentist optimization."
-        )
+    # Check if we have valid restraints
+    if not hasattr(scoring_restraint_wrapper, 'scoring_restraint_instance'):
+        raise ValueError("Provided wrapper does not contain a scoring restraint.")
 
     for av in avs:
-        p = av.get_particle()
-        if not IMP.atom.Mass.get_is_setup(p):
-            IMP.atom.Mass.setup_particle(p, 1.0)
         IMP.core.XYZ(av).set_coordinates_are_optimized(True)
 
     if hasattr(scoring_restraint_wrapper, "set_return_objective"):

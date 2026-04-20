@@ -12,7 +12,7 @@ from smlm_score.imp_modeling.scoring.distance_score import (
     _compute_distance_score_and_grad_cpu,
     computescoresimple,
 )
-from smlm_score.imp_modeling.scoring.gmm_score import compute_nb_gmm
+from smlm_score.imp_modeling.scoring.gmm_score import compute_nb_gmm, compute_nb_gmm_with_grad
 from smlm_score.imp_modeling.scoring.tree_score import (
     computescoretree,
     computescoretree_with_grad,
@@ -118,6 +118,7 @@ class ScoringRestraintGMM(_ScoringRestraintBase):
         gmm_sel_mean,
         gmm_sel_cov,
         gmm_sel_weight,
+        model_variance=8.0,
         scaling=0.1,
         offsetxyz=None,
         model_coords_override=None,
@@ -133,17 +134,41 @@ class ScoringRestraintGMM(_ScoringRestraintBase):
         self.gmm_sel_mean = gmm_sel_mean
         self.gmm_sel_cov = gmm_sel_cov
         self.gmm_sel_weight = gmm_sel_weight
+        self.model_variance = model_variance
 
     def unprotected_evaluate(self, da):
-        del da
         model_xyzs = self._current_model_coords()
+        sign = self._score_sign()
+
+        if da is not None:
+            score, grad = compute_nb_gmm_with_grad(
+                model_xyzs,
+                self.gmm_sel_mean,
+                self.gmm_sel_cov,
+                self.gmm_sel_weight,
+                model_variance=self.model_variance,
+            )
+            derivative_scale = self.scaling
+            derivative_sign = self._imp_derivative_sign()
+            
+            for i, av in enumerate(self.avs_decorators):
+                xyz = IMP.core.XYZ(av)
+                grad_vec = IMP.algebra.Vector3D(
+                    derivative_sign * grad[i][0] * derivative_scale,
+                    derivative_sign * grad[i][1] * derivative_scale,
+                    derivative_sign * grad[i][2] * derivative_scale,
+                )
+                xyz.add_to_derivatives(grad_vec, da)
+            return sign * score
+
         score = compute_nb_gmm(
             model_xyzs,
             self.gmm_sel_mean,
             self.gmm_sel_cov,
             self.gmm_sel_weight,
+            model_variance=self.model_variance,
         )
-        return self._score_sign() * score
+        return sign * score
 
     def get_output(self):
         return {"GMMScoringRestraint_Score": str(self.unprotected_evaluate(None))}
@@ -309,6 +334,7 @@ class ScoringRestraintWrapper(IMP.pmi.restraints.RestraintBase):
         var=None,
         kdtree_obj=None,
         weights=None,
+        model_variance: float = 8.0,
         scaling: float = 0.1,
         searchradius: float = 10.0,
         offsetxyz: np.ndarray = None,
@@ -351,6 +377,7 @@ class ScoringRestraintWrapper(IMP.pmi.restraints.RestraintBase):
                 gmm_sel_mean,
                 gmm_sel_cov,
                 gmm_sel_weight,
+                model_variance=model_variance,
                 scaling=scaling,
                 offsetxyz=offsetxyz,
                 model_coords_override=model_coords_override,

@@ -16,7 +16,7 @@ from sklearn.neighbors import KDTree
 # GMM core function (Numba JIT compiled)
 from smlm_score.imp_modeling.scoring.gmm_score import compute_nb_gmm
 # GMM CPU-only for direct testing
-from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu
+from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_and_grad_cpu
 
 # Distance core function (Numba JIT compiled)
 from smlm_score.imp_modeling.scoring.distance_score import _compute_distance_score_cpu
@@ -461,7 +461,7 @@ class TestCUDAGPUConsistency:
         weight = np.array([1.0], dtype=np.float64)
         model = np.array([[5.0, 3.0, 1.0], [10.0, 0.0, 0.0]], dtype=np.float64)
 
-        score_cpu = _compute_nb_gmm_cpu(model, mean, cov, weight)
+        score_cpu, _ = _compute_nb_gmm_and_grad_cpu(model, mean, cov, weight, 8.0)
         score_gpu = compute_nb_gmm_gpu(model, mean, cov, weight)
         assert score_gpu == pytest.approx(score_cpu, rel=1e-6)
 
@@ -475,7 +475,7 @@ class TestCUDAGPUConsistency:
         weights = np.ones(n_comp, dtype=np.float64) / n_comp
         model = rng.randn(8, 3).astype(np.float64) * 5
 
-        score_cpu = _compute_nb_gmm_cpu(model, means, covs, weights)
+        score_cpu, _ = _compute_nb_gmm_and_grad_cpu(model, means, covs, weights, 8.0)
         score_gpu = compute_nb_gmm_gpu(model, means, covs, weights)
         assert score_gpu == pytest.approx(score_cpu, rel=1e-6)
 
@@ -487,7 +487,7 @@ class TestCUDAGPUConsistency:
         model = np.array([[0.0, 0.0, 0.0]], dtype=np.float64)
         offset = np.array([2.0, 3.0, -1.0], dtype=np.float64)
 
-        score_cpu = _compute_nb_gmm_cpu(model.copy(), mean, cov, weight, offset_xyz=offset)
+        score_cpu, _ = _compute_nb_gmm_and_grad_cpu(model.copy(), mean, cov, weight, 8.0, offset_xyz=offset)
         score_gpu = compute_nb_gmm_gpu(model.copy(), mean, cov, weight, offset_xyz=offset)
         assert score_gpu == pytest.approx(score_cpu, rel=1e-6)
 
