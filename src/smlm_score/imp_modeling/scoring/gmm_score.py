@@ -271,6 +271,12 @@ def _compute_nb_gmm_and_grad_cpu(
     return score_total, grad
 
 
+@jit(nopython=True, fastmath=True)
+def _compute_nb_gmm_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance=8.0, offset_xyz=None):
+    """Backward-compatible wrapper for score-only evaluation."""
+    score, _ = _compute_nb_gmm_and_grad_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
+    return score
+
 def compute_nb_gmm_with_grad(model_xyzs, data_mean, data_cov, data_weight, model_variance=8.0, offset_xyz=None):
     """
     Dispatcher: uses GPU kernel (score only) when CUDA is available and data is large enough,
@@ -282,5 +288,4 @@ def compute_nb_gmm_with_grad(model_xyzs, data_mean, data_cov, data_weight, model
 def compute_nb_gmm(model_xyzs, data_mean, data_cov, data_weight, model_variance=8.0, offset_xyz=None):
     if HAS_CUDA and len(data_mean) >= CUDA_MIN_DATA_SIZE:
         return compute_nb_gmm_gpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
-    score, _ = _compute_nb_gmm_and_grad_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
-    return score
+    return _compute_nb_gmm_cpu(model_xyzs, data_mean, data_cov, data_weight, model_variance, offset_xyz=offset_xyz)
