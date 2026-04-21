@@ -141,13 +141,48 @@ def run_all_benchmarks():
         
         # GMM
         t0 = time.time()
-        _, _, g_mean, g_cov, g_weight = test_gmm_components(data, component_min=1, component_max=8)
+        _, _, g_mean, g_cov, g_weight = test_gmm_components(data, component_min=1, component_max=8, reg_covar=0.1)
         t_init_gmm = (time.time() - t0) * 1000
         results['GMM']['init'].append(t_init_gmm)
         t_gmm = timeit.timeit(lambda: _compute_nb_gmm_cpu(model, g_mean, g_cov, g_weight), number=eval_iterations) / eval_iterations * 1000
         results['GMM']['eval'].append(t_gmm)
 
     return results
+
+def run_gmm_init_benchmark(base_xyz, data_sizes):
+    """Measures BIC selection time for GMM across sizes."""
+    points = []
+    times = []
+    for size in data_sizes:
+        print(f"GMM Init Benchmark: N={size}...")
+        if size > len(base_xyz):
+            indices = np.random.choice(len(base_xyz), size=size, replace=True)
+        else:
+            indices = np.random.choice(len(base_xyz), size=size, replace=False)
+        data = base_xyz[indices]
+        
+        t0 = time.time()
+        test_gmm_components(data, component_min=1, component_max=8, reg_covar=0.1)
+        times.append(time.time() - t0)
+        points.append(size)
+    return {'points': points, 'time': times}
+
+def run_radius_benchmark(base_xyz, base_sigma):
+    """Measures Tree scaling across search radii at fixed N=5,000."""
+    N_FIXED = 5000
+    radii = [1, 2, 5, 10, 15, 20, 30, 50, 100, 200]
+    indices = np.random.choice(len(base_xyz), size=N_FIXED, replace=False)
+    data = base_xyz[indices]
+    variances = base_sigma[indices] ** 2 if base_sigma is not None else np.ones(N_FIXED)
+    model = generate_synthetic_data(128)
+    
+    times = []
+    print(f"Radius Sensitivity Benchmark (N={N_FIXED})...")
+    for r in radii:
+        t_r = timeit.timeit(lambda: computescoretree(None, None, data, variances, searchradius=r, model_coords_override=model), number=20) / 20 * 1000
+        times.append(t_r)
+        print(f"  Radius: {r:>3} nm | Time: {t_r:7.2f} ms")
+    return {'radii': radii, 'times': times}
 
 # =============================================================================
 # PLOTTING FUNCTIONS
@@ -322,7 +357,21 @@ def save_summary_table(results, output_dir):
 # =============================================================================
 if __name__ == "__main__":
     warmup()
+    
+    # Load experimental data for specialized sub-benchmarks
+    THIS_DIR = os.path.abspath(os.path.dirname(__file__))
+    THESIS_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
+    csv_path = os.path.join(THESIS_ROOT, "smlm_score", "examples", "ShareLoc_Data", "data.csv")
+    raw_df = read_experimental_data(csv_path)
+    base_xyz, base_sigma, _, _, _ = flexible_filter_smlm_data(
+        raw_df, filter_type='cut', x_cut=(10000, 12000), y_cut=(0, 5000), fill_z_value=0.0
+    )
+
+    # Run benchmarks
     data_results = run_all_benchmarks()
+    data_results['GMM_scaling'] = run_gmm_init_benchmark(base_xyz, data_results['sizes'])
+    data_results['Radius'] = run_radius_benchmark(base_xyz, base_sigma)
+
     figures_dir = os.path.join(THESIS_ROOT, "smlm_score", "examples", "figures", "benchmarks")
     os.makedirs(figures_dir, exist_ok=True)
     
@@ -330,6 +379,9 @@ if __name__ == "__main__":
         print(f"\nGenerating {theme} theme figures...")
         plot_fig_a(data_results, figures_dir, theme)
         plot_fig_b(data_results, figures_dir, theme)
+        plot_fig_c(data_results, figures_dir, theme)
+        plot_fig_d(data_results, figures_dir, theme)
+        plot_fig_e(data_results, figures_dir, theme)
     
     save_summary_table(data_results, figures_dir)
-    print("\nMaster Benchmark Complete. Figures and Table generated in examples/figures/benchmarks/")
+    print("\nMaster Benchmark Complete. All 5 Figures and Table generated in examples/figures/benchmarks/")

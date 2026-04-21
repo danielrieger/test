@@ -39,6 +39,13 @@ pip install -e .
 
 This project was developed with a conda-pack environment (Python 3.11). Core dependencies are listed in `requirements.txt`. The IMP library must be installed separately following the [IMP installation guide](https://integrativemodeling.org/nightly/doc/manual/installation.html).
 
+### Documentation
+
+For mathematical details and current method limitations, see:
+
+- [Scoring Models and Mathematical Formulations](docs/scoring_models.md)
+- [GMM Overview and Roadmap](docs/gmm_overview_and_roadmap.md)
+
 ## Input Data
 
 The following large input files are **not included** in this repository. Download them and place them in the indicated directories:
