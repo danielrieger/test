@@ -217,6 +217,17 @@ def run_bayesian_sampling(
             f.write(f"{frame},{score},{acceptance},{temp}\n")
     print(f"  Frame scores saved to: {scores_csv_path}")
 
+    # Add post-sampling score summary
+    if stat_data:
+        try:
+            # Score key can be 'Total_Score' or a specific restraint score
+            score_key = inv_header.get('Total_Score')
+            scores = [float(e.get(score_key, 0)) for e in stat_data if score_key in e]
+            if scores:
+                print(f"  Score: {scores[0]:.4f} (initial) \u2192 {scores[-1]:.4f} (final) | Best: {min(scores):.4f}")
+        except:
+            pass
+
     # Write final AV coordinates (post-sampling snapshot)
     av_coords_path = os.path.join(output_dir, "av_coordinates_final.csv")
     with open(av_coords_path, "w") as f:
@@ -257,7 +268,6 @@ def run_bayesian_sampling(
                 continue
 
     del av_rmf  # Close the file
-    print(f"  AV trajectory RMF saved to: {av_rmf_path}")
 
     # Write a full-structure trajectory RMF using explicit global coordinates.
     # IMP.rmf.save_frame does NOT correctly record rigid body member positions
@@ -355,5 +365,12 @@ def run_bayesian_sampling(
                             frame_av_coords[i, 2]))
 
     del full_rmf  # Close the file
-    print(f"  Full trajectory RMF saved to: {full_rmf_path}")
+    # Consolidate results in a clean footer
+    print("\n" + "─" * 50)
+    print(f"RESULTS: {output_dir}/")
+    print(f"  full_trajectory.rmf3    {len(rmf_nodes)} beads \u00d7 {len(stat_data)} frames")
+    print(f"  av_trajectory.rmf3      {len(av_rmf_nodes)} AVs \u00d7 {len(stat_data)} frames")
+    print(f"  frame_scores.csv        score trace")
+    print(f"  av_coordinates_final.csv  final AV positions")
+    print("─" * 50)
 

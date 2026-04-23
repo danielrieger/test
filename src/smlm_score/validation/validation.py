@@ -376,23 +376,19 @@ def run_full_validation(
     cluster_scores: Dict[int, Dict[str, float]],
     held_out_results: Optional[Dict[str, Dict]] = None,
     scoring_types: Optional[List[str]] = None,
-    cross_val_data: Optional[Dict[str, Any]] = None
+    cross_val_data: Optional[Dict[str, Any]] = None,
+    cluster_id: Optional[int] = None
 ) -> List[ValidationResult]:
     """
-    Runs all available validation checks and produces a consolidated report.
+    Runs structural cross-validation and produces a clean tabular summary.
+    Separation and Held-out tests are deprecated in this high-res EMAN2 workflow.
     """
-    # Distance is redundant with Tree after unification; ignore by default in sep tests
     if scoring_types is None:
         scoring_types = ["Tree", "GMM"]
 
     all_results = []
 
-    # 1. Separation validation (valid vs. noise clusters)
-    separation_results = validate_scoring_separation(
-        cluster_scores, scoring_types)
-    all_results.extend(separation_results)
-
-    # 2. Cross-Validation (Structural Discrimination)
+    # 1. Structural Cross-Validation (The core metric for thesis)
     if cross_val_data:
         for stype in scoring_types:
             res = validate_cross_validated_npc(
@@ -404,39 +400,28 @@ def run_full_validation(
             )
             all_results.append(res)
 
-    # 3. Held-out data validation (if available)
-    if held_out_results:
-        for stype in scoring_types:
-            if stype in held_out_results:
-                ho_data = held_out_results[stype]
-                result = validate_with_held_out_data(
-                    valid_cluster_score=ho_data['valid_score'],
-                    valid_n_points=ho_data['valid_n_points'],
-                    held_out_scores=ho_data['held_out_scores'],
-                    held_out_n_points=ho_data['held_out_n_points'],
-                    scoring_type=stype
-                )
-                all_results.append(result)
+    # 2. Print Clean Summary Report
+    cid_str = f": Cluster {cluster_id}" if cluster_id is not None else ""
+    print(f"\nVALIDATION SUMMARY{cid_str}")
+    print("-" * 50)
+    print(f"{'Test Name':<20} | {'Metric':<9} | {'Status':<7}")
+    print("-" * 50)
 
-    # 3. Print summary report
-    print("\n" + "=" * 70)
-    print("VALIDATION REPORT")
-    print("=" * 70)
-
-    n_passed = sum(1 for r in all_results if r.passed and not r.skipped)
-    n_total = sum(1 for r in all_results if not r.skipped)
+    n_passed = 0
+    n_total = len(all_results)
 
     for r in all_results:
-        if r.skipped:
-            status = "SKIP"
-            mark = "~"
-        else:
-            status = "PASS" if r.passed else "FAIL"
-            mark = "+" if r.passed else "x"
-        print(f"  [{mark} {status}] {r.test_name}: {r.details}")
+        status = "[PASS]" if r.passed else "[FAIL]"
+        if r.passed: n_passed += 1
+        
+        # Extract sigma metric if available
+        metric_val = r.metrics.get('separation_sigma', 0.0)
+        metric_str = f"{metric_val:6.2f} \u03c3" # sigma symbol
+        
+        print(f"{r.test_name:<20} | {metric_str:<9} | {status:<7}")
 
-    print("-" * 70)
-    print(f"  Total: {n_passed}/{n_total} passed")
-    print("=" * 70)
+    print("-" * 50)
+    print(f"OVERALL: {n_passed}/{n_total} PASSED")
+    print("-" * 50 + "\n")
 
     return all_results
