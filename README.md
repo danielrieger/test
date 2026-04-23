@@ -59,6 +59,8 @@ The following large input files are **not included** in this repository. Downloa
 The pipeline generates publication-quality visualizations for structural alignment and quality control.
 
 ````carousel
+![Final Thesis Result: NPC Box 240 (5nm High-Res)](examples/figures/methodology/thesis_final_result_v4.png)
+<!-- slide -->
 ![Top-Ranked NPC (Cluster 347) — GMM Overlay](examples/figures/qc/gmm_cluster_overlay_rank0_id347.png)
 <!-- slide -->
 ![Stylized 3D Isosurface Model](examples/figures/methodology/npc_isosurface_3d.png)
@@ -98,15 +100,53 @@ smlm_score/
 │   ├── utility/
 │   │   ├── data_handling.py     # Structural ranking, HDBSCAN, PCA alignment
 │   │   └── visualization.py     # Stylized 3D (Pyvista) & Publication White themes
-├── examples/
-│   ├── figures/                 # Categorized Thesis Assets
-│   │   ├── methodology/         # 3D, PCA summary, fitting sequences
+│   ├── docs/
+│   │   ├── eman2_workflow.md    # High-Res Picking workflow
+│   │   └── scoring_models.md    # Physics/Scoring background
+│   ├── examples/
+│   │   ├── figures/             # Categorized Thesis Assets
 │   │   ├── benchmarks/          # Scaling and performance plots
 │   │   └── qc/                  # GMM BIC selection and top-ranked overlays
 │   ├── benchmark_scoring.py     # Performance scaling benchmark
 │   └── visualize_gmm_selection.py # Intelligent NPC selection & BIC plots
 └── tests/                       # 97 pytest tests
 ```
+
+## Advanced Workflows
+
+### 1. Bayesian Trajectory Visualization (RMF)
+When running in `bayesian` optimization mode, the pipeline generates two state-of-the-art RMF3 trajectories in the output directory (e.g., `bayesian_cluster_11/`):
+- `av_trajectory.rmf3`: A lightweight file containing only the moving fluorophore center points (AVs).
+- `full_trajectory.rmf3`: A high-fidelity reconstruction containing all ~15,000 protein beads. The structural pose is recovered from sampled AV coordinates using a rigid-body SVD transformation (Kabsch algorithm).
+
+**To visualize in ChimeraX:**
+1. Open `full_trajectory.rmf3`.
+2. Use the **Log** or **Tools > General > Playback** to animate the REMC sampling steps.
+3. You will see the entire protein assembly moving as a unified rigid body.
+
+### 2. EMAN2 Particle Picking (High-Res 5nm)
+The pipeline supports state-of-the-art particle picking using EMAN2's neural network autoboxing on high-resolution (5nm) intensity-weighted density maps.
+
+For a detailed step-by-step guide, see: [EMAN2 Workflow & High-Res Picking](docs/eman2_workflow.md).
+
+**Key Upgrades:**
+- **5 nm/pixel** resolution for structural clarity.
+- **Intensity-weighted** rendering using `Amplitude_0_0`.
+- **Targeted Modeling** of 300+ picked NPCs.
+
+*Technical Note: If your box metadata is lost, use `examples/recover_boxes.py` to rebuild it from existing CSV fragments.*
+
+## Maintenance & Data Safety
+
+### Synchronization (Windows/WSL)
+Because input data (PDBs, SMLM CSVs) and EMAN2 results are often excluded from Git due to size, use the provided `safe_sync.sh` script to align development environments:
+
+```bash
+# In WSL:
+./safe_sync.sh
+```
+
+This script uses `rsync --update` and explicit excludes to ensure that **untracked local data in WSL is never deleted or overwritten** when pulling code updates from the Windows "Source of Truth" workspace.
 
 ## Validation
 
