@@ -1,3 +1,6 @@
+import mrcfile
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
 import IMP
 import IMP.algebra
 import IMP.atom
@@ -12,6 +15,7 @@ import json
 import numpy as np
 import os
 import sys
+import shutil
 
 
 def run_bayesian_sampling(
@@ -217,7 +221,42 @@ def run_bayesian_sampling(
             f.write(f"{frame},{score},{acceptance},{temp}\n")
     print(f"  Frame scores saved to: {scores_csv_path}")
 
+    # Add post-sampling score summary
+    if stat_data:
+        try:
+            # Score key can be 'Total_Score' or a specific restraint score
+            score_key = inv_header.get('Total_Score')
+            scores = [float(e.get(score_key, 0)) for e in stat_data if score_key in e]
+            if scores:
+                print(f"  Score: {scores[0]:.4f} (initial) \u2192 {scores[-1]:.4f} (final) | Best: {min(scores):.4f}")
+        except:
+            pass
+
     # Write final AV coordinates (post-sampling snapshot)
+    best_av_coords = None
+    best_score = None
+    if stat_data:
+        try:
+            score_key = inv_header.get('Total_Score')
+            scored_entries = [
+                (float(entry.get(score_key)), entry)
+                for entry in stat_data
+                if score_key in entry
+            ]
+            if scored_entries:
+                best_score, best_entry = min(scored_entries, key=lambda x: x[0])
+                best_av_coords = np.array([
+                    [
+                        float(best_entry.get(inv_header.get(f"AV_{i}_x"))),
+                        float(best_entry.get(inv_header.get(f"AV_{i}_y"))),
+                        float(best_entry.get(inv_header.get(f"AV_{i}_z"))),
+                    ]
+                    for i in range(len(avs))
+                ], dtype=np.float64)
+        except (TypeError, ValueError):
+            best_av_coords = None
+            best_score = None
+
     av_coords_path = os.path.join(output_dir, "av_coordinates_final.csv")
     with open(av_coords_path, "w") as f:
         f.write("av_index,x,y,z\n")
@@ -225,6 +264,14 @@ def run_bayesian_sampling(
             xyz = IMP.core.XYZ(av)
             f.write(f"{i},{xyz.get_x():.6f},{xyz.get_y():.6f},{xyz.get_z():.6f}\n")
     print(f"  Final AV coordinates saved to: {av_coords_path}")
+
+    if best_av_coords is not None:
+        best_coords_path = os.path.join(output_dir, "av_coordinates_best.csv")
+        with open(best_coords_path, "w") as f:
+            f.write("av_index,x,y,z\n")
+            for i, coords in enumerate(best_av_coords):
+                f.write(f"{i},{coords[0]:.6f},{coords[1]:.6f},{coords[2]:.6f}\n")
+        print(f"  Best AV coordinates saved to: {best_coords_path}")
 
     # Write a dedicated AV-only RMF3 file with the FULL trajectory
     av_rmf_path = os.path.join(output_dir, "av_trajectory.rmf3")
@@ -257,7 +304,6 @@ def run_bayesian_sampling(
                 continue
 
     del av_rmf  # Close the file
-    print(f"  AV trajectory RMF saved to: {av_rmf_path}")
 
     # Write a full-structure trajectory RMF using explicit global coordinates.
     # IMP.rmf.save_frame does NOT correctly record rigid body member positions
@@ -355,5 +401,184 @@ def run_bayesian_sampling(
                             frame_av_coords[i, 2]))
 
     del full_rmf  # Close the file
-    print(f"  Full trajectory RMF saved to: {full_rmf_path}")
+    # Consolidate results in a clean footer
+    print("\n" + "─" * 50)
+    print(f"RESULTS: {output_dir}/")
+    print(f"  full_trajectory.rmf3    {len(rmf_nodes)} beads \u00d7 {len(stat_data)} frames")
+    print(f"  av_trajectory.rmf3      {len(av_rmf_nodes)} AVs \u00d7 {len(stat_data)} frames")
+    print(f"  frame_scores.csv        score trace")
+    print(f"  av_coordinates_final.csv  final AV positions")
+    if best_av_coords is not None:
+        print(f"  av_coordinates_best.csv   best-scoring AV positions")
+    
+    # Generate posterior density map
+    density_files = _generate_av_density_mrc(stat_data, inv_header, len(avs), output_dir, best_av_coords)
+    if density_files:
+        print(f"  posterior_density.mrc     AV posterior density map")
+        print(f"  posterior_density.png     Heatmap visualization")
+        
+    print("─" * 50)
 
+    final_av_coords = np.array([
+        np.array(IMP.core.XYZ(av).get_coordinates(), dtype=np.float64)
+        for av in avs
+    ])
+    return {
+        "final_av_coords": final_av_coords,
+        "best_av_coords": best_av_coords,
+        "best_score": best_score,
+        "output_dir": output_dir,
+        "density_mrc": density_files.get("mrc") if density_files else None,
+        "density_png": density_files.get("png") if density_files else None,
+    }
+
+
+def _generate_av_density_mrc(
+    stat_data,
+    inv_header,
+    n_avs,
+    output_dir,
+    best_av_coords=None,
+    burnin_fraction=0.2,
+    pixel_size_nm=2.0,
+    sigma_px=1.5,
+    score_percentile=25,
+    align_to_centroid=True
+):
+    """Accumulate AV positions into a 3D (flat Z) density map.
+    
+    Filters frames by the best `score_percentile` to focus on high-quality poses.
+    If `align_to_centroid` is True, each frame is centered by its AV centroid
+    to remove rigid-body translational drift, revealing the true shape uncertainty.
+    """
+    if not stat_data:
+        return None
+
+    # 1. Apply burn-in
+    n_frames = len(stat_data)
+    start_frame = int(n_frames * burnin_fraction)
+    post_burnin = stat_data[start_frame:]
+    
+    if not post_burnin:
+        return None
+
+    # 2. Score-based filtering
+    score_key = inv_header.get('Total_Score')
+    frame_scores = []
+    for entry in post_burnin:
+        try:
+            frame_scores.append(float(entry.get(score_key)))
+        except (TypeError, ValueError):
+            frame_scores.append(float('inf'))
+    
+    frame_scores = np.array(frame_scores)
+    score_cutoff = np.percentile(frame_scores, score_percentile)
+    good_mask = frame_scores <= score_cutoff
+    n_good = good_mask.sum()
+    
+    print(f"  Accumulating density from {n_good}/{len(post_burnin)} frames "
+          f"(burn-in: {start_frame}, score ≤ {score_cutoff:.2f}, top {score_percentile}%)...")
+
+    # 3. Extract coordinates (optionally centered)
+    all_x = []
+    all_y = []
+    for idx, entry in enumerate(post_burnin):
+        if not good_mask[idx]:
+            continue
+        
+        frame_x = []
+        frame_y = []
+        for i in range(n_avs):
+            try:
+                frame_x.append(float(entry.get(inv_header.get(f"AV_{i}_x"))) * 0.1) # to nm
+                frame_y.append(float(entry.get(inv_header.get(f"AV_{i}_y"))) * 0.1) # to nm
+            except:
+                continue
+        
+        if frame_x:
+            if align_to_centroid:
+                cx, cy = np.mean(frame_x), np.mean(frame_y)
+                all_x.extend([x - cx for x in frame_x])
+                all_y.extend([y - cy for y in frame_y])
+            else:
+                all_x.extend(frame_x)
+                all_y.extend(frame_y)
+    
+    if not all_x:
+        return None
+        
+    all_x = np.array(all_x)
+    all_y = np.array(all_y)
+
+    # 4. Create 2D histogram
+    pad = 20.0
+    min_x, max_x = all_x.min() - pad, all_x.max() + pad
+    min_y, max_y = all_y.min() - pad, all_y.max() + pad
+    
+    width_nm = max_x - min_x
+    height_nm = max_y - min_y
+    
+    bins_x = int(np.ceil(width_nm / pixel_size_nm))
+    bins_y = int(np.ceil(height_nm / pixel_size_nm))
+    
+    heatmap, _, _ = np.histogram2d(
+        all_y, all_x,
+        bins=[bins_y, bins_x],
+        range=[[min_y, min_y + bins_y * pixel_size_nm], [min_x, min_x + bins_x * pixel_size_nm]]
+    )
+
+    # 5. Smooth
+    heatmap = gaussian_filter(heatmap, sigma=sigma_px)
+    
+    # 6. Save MRC
+    mrc_path = os.path.join(output_dir, "posterior_density.mrc")
+    with mrcfile.new(mrc_path, overwrite=True) as mrc:
+        mrc.set_data(heatmap.reshape(1, bins_y, bins_x).astype(np.float32))
+        mrc.voxel_size = pixel_size_nm * 10.0
+        mrc.header.origin.x = min_x * 10.0
+        mrc.header.origin.y = min_y * 10.0
+        mrc.header.origin.z = 0.0
+
+    # 7. Save Visualization
+    png_path = os.path.join(output_dir, "posterior_density.png")
+    plt.figure(figsize=(10, 8))
+    plt.imshow(heatmap, extent=[min_x, max_x, min_y, max_y], origin='lower', cmap='viridis')
+    plt.colorbar(label='Probability Density')
+    
+    if best_av_coords is not None:
+        best_nm = best_av_coords * 0.1
+        if align_to_centroid:
+            bcx, bcy = np.mean(best_nm[:, 0]), np.mean(best_nm[:, 1])
+            plt.scatter(best_nm[:, 0] - bcx, best_nm[:, 1] - bcy, 
+                        c='red', marker='x', s=100, linewidths=2, label='Best Fit AVs')
+        else:
+            plt.scatter(best_nm[:, 0], best_nm[:, 1], 
+                        c='red', marker='x', s=100, linewidths=2, label='Best Fit AVs')
+        plt.legend()
+        
+    title = f"Posterior AV Density (Top {score_percentile}% of {n_frames} frames)"
+    if align_to_centroid:
+        title += "\nCentroid-Aligned"
+        plt.xlabel("Δx [nm]")
+        plt.ylabel("Δy [nm]")
+    else:
+        plt.xlabel("x [nm]")
+        plt.ylabel("y [nm]")
+        
+    plt.title(title)
+    plt.gca().set_aspect('equal')
+    plt.tight_layout()
+    plt.savefig(png_path, dpi=150)
+    plt.close()
+
+
+    # Copy to examples/figures/Posterior if path exists
+    figures_dir = os.path.join("examples", "figures", "Posterior")
+    if os.path.exists(figures_dir):
+        # Determine a descriptive name based on frame count
+        target_name = f"posterior_density_{n_frames}f.png"
+        shutil.copy(png_path, os.path.join(figures_dir, target_name))
+        # Also keep a general name for the latest production figure
+        shutil.copy(png_path, os.path.join(figures_dir, "posterior_density_latest.png"))
+
+    return {"mrc": mrc_path, "png": png_path}

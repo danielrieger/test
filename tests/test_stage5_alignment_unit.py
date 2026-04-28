@@ -5,7 +5,7 @@ Unit tests for Stage 5 PCA alignment behavior.
 import numpy as np
 import pytest
 
-from smlm_score.utility.data_handling import align_npc_cluster_pca
+from smlm_score.utility.data_handling import align_npc_cluster, align_npc_cluster_pca
 
 
 def _make_tilted_ring(n_points=128, radius=50.0):
@@ -84,3 +84,35 @@ def test_stage5_alignment_returns_orthonormal_proper_rotation():
 
     assert np.allclose(rotation @ rotation.T, np.eye(3), atol=1e-10)
     assert np.isclose(np.linalg.det(rotation), 1.0, atol=1e-10)
+
+
+@pytest.mark.unit
+def test_stage5_auto_alignment_flat_2d_skips_pca_and_centers_xy():
+    pts = np.array(
+        [
+            [10.0, 20.0, 0.0],
+            [14.0, 22.0, 0.0],
+            [12.0, 24.0, 0.0],
+            [8.0, 18.0, 0.0],
+        ],
+        dtype=float,
+    )
+
+    out = align_npc_cluster(pts, data_dim="auto", debug=False)
+
+    assert out["data_dim"] == "2d"
+    assert out["used_pca"] is False
+    assert np.allclose(out["rotation"], np.eye(3))
+    assert np.allclose(out["aligned_data"][:, :2].mean(axis=0), [0.0, 0.0])
+    assert np.allclose(out["aligned_data"][:, 2], pts[:, 2])
+
+
+@pytest.mark.unit
+def test_stage5_auto_alignment_3d_uses_pca():
+    pts = _make_tilted_ring()
+
+    out = align_npc_cluster(pts, data_dim="auto", debug=False)
+
+    assert out["data_dim"] == "3d"
+    assert out["used_pca"] is True
+    assert np.std(out["aligned_data"][:, 2]) < 1e-10

@@ -414,7 +414,77 @@ def align_npc_cluster_pca(smlm_cluster: np.ndarray, debug: bool = False) -> dict
     return {
         'aligned_data': aligned_data,
         'translation': -centroid,
-        'rotation': rotation_matrix
+        'rotation': rotation_matrix,
+        'data_dim': '3d',
+        'used_pca': True
+    }
+
+
+def _is_effectively_2d(smlm_cluster: np.ndarray, z_tol: float = 1e-6) -> bool:
+    """Return True when the point cloud has no meaningful z variation."""
+    arr = np.asarray(smlm_cluster)
+    if arr.ndim != 2:
+        raise ValueError("smlm_cluster must be a 2D array.")
+    if arr.shape[1] < 3:
+        return True
+    if len(arr) == 0:
+        return True
+    return bool(np.nanmax(arr[:, 2]) - np.nanmin(arr[:, 2]) <= z_tol)
+
+
+def align_npc_cluster(
+    smlm_cluster: np.ndarray,
+    data_dim: str = "auto",
+    debug: bool = False,
+    z_tol: float = 1e-6,
+) -> dict:
+    """
+    Align an NPC cluster with data-dimensionality awareness.
+
+    For 2D SMLM/EMAN2 data, z is often filled with a constant 0.0. In that
+    case PCA rotation is arbitrary and noise-driven, so we only center x/y
+    while keeping the identity rotation. True 3D data keeps the legacy PCA
+    plane-alignment behavior.
+    """
+    pts = np.asarray(smlm_cluster)
+    if pts.ndim != 2:
+        raise ValueError("smlm_cluster must be a 2D array.")
+
+    if data_dim not in {"auto", "2d", "3d"}:
+        raise ValueError("data_dim must be 'auto', '2d', or '3d'.")
+
+    is_2d = data_dim == "2d" or (data_dim == "auto" and _is_effectively_2d(pts, z_tol=z_tol))
+    if not is_2d:
+        return align_npc_cluster_pca(pts, debug=debug)
+
+    if len(pts) == 0:
+        centroid = np.zeros(pts.shape[1] if pts.ndim == 2 else 3, dtype=float)
+        aligned = pts.copy()
+    else:
+        centroid = np.mean(pts, axis=0)
+        translation = np.zeros_like(centroid, dtype=float)
+        translation[:2] = -centroid[:2]
+        aligned = pts.copy()
+        aligned[:, :2] = aligned[:, :2] + translation[:2]
+        if pts.shape[1] >= 3:
+            aligned[:, 2] = pts[:, 2]
+
+    rotation = np.eye(3, dtype=float)
+    translation3 = np.zeros(3, dtype=float)
+    if len(pts) > 0:
+        translation3[: min(2, pts.shape[1])] = -centroid[: min(2, pts.shape[1])]
+
+    if debug:
+        print("\n2D Alignment Results:")
+        print(f"XY translation applied: {translation3}")
+        print("PCA rotation skipped for 2D data.")
+
+    return {
+        'aligned_data': aligned,
+        'translation': translation3,
+        'rotation': rotation,
+        'data_dim': '2d',
+        'used_pca': False,
     }
 
 

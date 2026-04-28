@@ -268,7 +268,7 @@ def test_stage8_validation_integration_run_full_validation():
         "Tree": {
             "valid_score": -100.0,
             "valid_n_points": 100,
-            "held_out_scores": [0.0, 0.0],
+            "held_out_scores": [-500.0, -600.0],
             "held_out_n_points": [50, 50],
         }
     }

@@ -53,13 +53,29 @@ def test_gmm_components(
     gmm_sel_weight : np.ndarray
         Weights of the selected model, shape (K,).
     """
+    data = np.asarray(data, dtype=np.float64)
+    if data.ndim != 2:
+        raise ValueError("data must be a 2D array of shape (N, D).")
+    if data.shape[0] == 0:
+        raise ValueError("Cannot fit a GMM to an empty point cloud.")
+
+    original_dim = data.shape[1]
+    dim_std = np.nanstd(data, axis=0)
+    active_dims = dim_std > 1e-9
+    if not np.any(active_dims):
+        active_dims[0] = True
+
+    fit_data = data[:, active_dims]
+    inactive_center = np.nanmean(data, axis=0)
+
     scores = list()
     aics = list()
     bics = list()
     gmms = list()
+    fitted_components = list()
 
     # Limit max components to the number of samples available
-    n_samples = data.shape[0]
+    n_samples = fit_data.shape[0]
     component_max = min(component_max, n_samples)
 
     # Make log spaced ints
@@ -71,12 +87,34 @@ def test_gmm_components(
 
     show_progress = show_progress and sys.stdout.isatty()
     for n_component in tqdm.tqdm(n_components, disable=not show_progress):
-        clf = mixture.GaussianMixture(n_component, covariance_type="full", reg_covar=reg_covar)
-        clf.fit(data)
-        scores.append(clf.score(data))
-        aics.append(clf.aic(data))
-        bics.append(clf.bic(data))
+        clf = None
+        for reg in (reg_covar, 1e-5, 1e-4, 1e-3, 1e-2):
+            try:
+                clf = mixture.GaussianMixture(
+                    n_component,
+                    covariance_type="full",
+                    reg_covar=max(float(reg), 1e-12),
+                    random_state=0,
+                )
+                clf.fit(fit_data)
+                break
+            except ValueError:
+                clf = None
+
+        if clf is None:
+            continue
+
+        scores.append(clf.score(fit_data))
+        aics.append(clf.aic(fit_data))
+        bics.append(clf.bic(fit_data))
         gmms.append(clf)
+        fitted_components.append(n_component)
+
+    if not gmms:
+        raise ValueError(
+            "GMM fitting failed for all tested component counts. "
+            "Try fewer components, stronger regularization, or inspect the input data."
+        )
 
     n = np.argmin(bics)
 
@@ -85,14 +123,29 @@ def test_gmm_components(
         'score': scores,
         'aic': aics,
         'bic': bics,
-        'n_components': n_components,
-        'n': n
+        'n_components': fitted_components,
+        'n': n,
+        'active_dims': active_dims,
     }
 
     gmm_sel = d['gmm'][d['n']]
-    gmm_sel_mean = gmm_sel.means_
-    gmm_sel_cov = gmm_sel.covariances_
+    gmm_sel_mean = np.tile(inactive_center, (gmm_sel.n_components, 1))
+    gmm_sel_mean[:, active_dims] = gmm_sel.means_
+
+    gmm_sel_cov = np.zeros((gmm_sel.n_components, original_dim, original_dim), dtype=np.float64)
+    active_idx = np.where(active_dims)[0]
+    for comp_idx in range(gmm_sel.n_components):
+        gmm_sel_cov[comp_idx] = np.eye(original_dim, dtype=np.float64) * max(reg_covar, 1e-6)
+        for i_fit, i_orig in enumerate(active_idx):
+            for j_fit, j_orig in enumerate(active_idx):
+                gmm_sel_cov[comp_idx, i_orig, j_orig] = gmm_sel.covariances_[comp_idx, i_fit, j_fit]
+
     gmm_sel_weight = gmm_sel.weights_
+
+    # Keep commonly inspected sklearn attributes in the original coordinate
+    # system. The scorer uses the explicit arrays returned below.
+    gmm_sel.means_ = gmm_sel_mean
+    gmm_sel.covariances_ = gmm_sel_cov
 
     return d, gmm_sel, gmm_sel_mean, gmm_sel_cov, gmm_sel_weight
 

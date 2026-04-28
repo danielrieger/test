@@ -14,9 +14,10 @@ Bayesian scoring of Single-Molecule Localization Microscopy (SMLM) data against 
   - Brownian Dynamics (geometric relaxation)
   - Conjugate Gradients (frequentist MLE)
   - Replica Exchange Monte Carlo (Bayesian posterior sampling with animated RMF trajectories)
+- **Posterior density mapping**: Automatically generates MRC volumetric density maps and PNG heatmaps from Bayesian sampling ensembles, with score-based filtering and centroid alignment for publication-quality figures
 - **HDBSCAN clustering**: Automated NPC isolation from dense SMLM fields
 - **PCA alignment**: Model-data registration
-- **Validation framework**: Separation tests and held-out cross-validation
+- **Validation framework**: 2D-aware alignment and robust model-vs-null structural cross-validation
 - **97 pytest tests**: Unit, integration, and robustness coverage
 
 ## Installation
@@ -45,6 +46,8 @@ For mathematical details and current method limitations, see:
 
 - [Scoring Models and Mathematical Formulations](docs/scoring_models.md)
 - [GMM Overview and Roadmap](docs/gmm_overview_and_roadmap.md)
+- [Posterior AV Density Mapping](docs/posterior_density.md)
+- [EMAN2 Particle Picking Workflow](docs/eman2_workflow.md)
 
 ## Input Data
 
@@ -56,9 +59,13 @@ The following large input files are **not included** in this repository. Downloa
 | `data.csv` | 29 MB | [ShareLoc repository](https://shareloc.xyz) | `examples/ShareLoc_Data/` |
 ## Visual Gallery
 
-The pipeline generates publication-quality visualizations for structural alignment and quality control.
+The pipeline generates publication-quality visualizations for structural alignment, quality control, and Bayesian posterior analysis.
 
 ````carousel
+![Final Thesis Result: NPC Box 240 (5nm High-Res)](examples/figures/methodology/thesis_final_result_v4.png)
+<!-- slide -->
+![Posterior AV Density Map (20,000 Frames)](examples/figures/Posterior/posterior_density_20000f.png)
+<!-- slide -->
 ![Top-Ranked NPC (Cluster 347) — GMM Overlay](examples/figures/qc/gmm_cluster_overlay_rank0_id347.png)
 <!-- slide -->
 ![Stylized 3D Isosurface Model](examples/figures/methodology/npc_isosurface_3d.png)
@@ -98,9 +105,11 @@ smlm_score/
 │   ├── utility/
 │   │   ├── data_handling.py     # Structural ranking, HDBSCAN, PCA alignment
 │   │   └── visualization.py     # Stylized 3D (Pyvista) & Publication White themes
-├── examples/
-│   ├── figures/                 # Categorized Thesis Assets
-│   │   ├── methodology/         # 3D, PCA summary, fitting sequences
+│   ├── docs/
+│   │   ├── eman2_workflow.md    # High-Res Picking workflow
+│   │   └── scoring_models.md    # Physics/Scoring background
+│   ├── examples/
+│   │   ├── figures/             # Categorized Thesis Assets
 │   │   ├── benchmarks/          # Scaling and performance plots
 │   │   └── qc/                  # GMM BIC selection and top-ranked overlays
 │   ├── benchmark_scoring.py     # Performance scaling benchmark
@@ -108,11 +117,61 @@ smlm_score/
 └── tests/                       # 97 pytest tests
 ```
 
+## Advanced Workflows
+
+### 1. Bayesian Trajectory Visualization (RMF)
+When running in `bayesian` optimization mode, the pipeline generates two state-of-the-art RMF3 trajectories in the output directory (e.g., `bayesian_cluster_11/`):
+- `av_trajectory.rmf3`: A lightweight file containing only the moving fluorophore center points (AVs).
+- `full_trajectory.rmf3`: A high-fidelity reconstruction containing all ~15,000 protein beads. The structural pose is recovered from sampled AV coordinates using a rigid-body SVD transformation (Kabsch algorithm).
+
+**To visualize in ChimeraX:**
+1. Open `full_trajectory.rmf3`.
+2. Use the **Log** or **Tools > General > Playback** to animate the REMC sampling steps.
+3. You will see the entire protein assembly moving as a unified rigid body.
+
+### 2. Posterior AV Density Mapping
+At the end of every Bayesian run, the pipeline automatically generates a probability density map of the 8 dye-attachment points (AVs) across the full sampling ensemble.
+
+Key features of the density engine:
+- **Score-based filtering**: Only the top 25% best-scoring frames are accumulated, discarding high-temperature exploratory poses.
+- **Centroid alignment**: Each frame is centered to its AV centroid before accumulation, removing rigid-body translational drift and revealing true structural uncertainty.
+- **MRC + PNG output**: Density maps are saved in MRC format (ChimeraX-ready) and as annotated heatmaps.
+- **Auto-export**: PNGs are automatically copied to `examples/figures/Posterior/` with a frame-count suffix.
+
+For a detailed technical description, see: [Posterior AV Density Mapping](docs/posterior_density.md).
+
+### 3. EMAN2 Particle Picking (High-Res 5nm)
+The pipeline supports state-of-the-art particle picking using EMAN2's neural network autoboxing on high-resolution (5nm) intensity-weighted density maps.
+
+For a detailed step-by-step guide, see: [EMAN2 Workflow & High-Res Picking](docs/eman2_workflow.md).
+
+**Key Upgrades:**
+- **5 nm/pixel** resolution for structural clarity.
+- **Intensity-weighted** rendering using `Amplitude_0_0`.
+- **Targeted Modeling** of 300+ picked NPCs.
+
+*Technical Note: If your box metadata is lost, use `examples/recover_boxes.py` to rebuild it from existing CSV fragments.*
+
+## Maintenance & Data Safety
+
+### Synchronization (Windows/WSL)
+Because input data (PDBs, SMLM CSVs) and EMAN2 results are often excluded from Git due to size, use the provided `safe_sync.sh` script to align development environments:
+
+```bash
+# In WSL:
+./safe_sync.sh
+```
+
+This script uses `rsync --update` and explicit excludes to ensure that **untracked local data in WSL is never deleted or overwritten** when pulling code updates from the Windows "Source of Truth" workspace.
+
 ## Validation
 
-The validation module implements two tests:
-1. **Separation test**: Confirms that density-normalized scores for valid NPC clusters outperform noise/off-target clusters.
-2. **Held-out test**: Verifies that the structural signal is captured by comparing scores across spatially disjoint subsets of the same NPC localization cloud.
+The validation module implements a robust, EMAN2-aware validation framework:
+1. **2D-Aware Alignment**: Correctly handles flattened 2D EMAN2 data by intelligently skipping PCA rotation while preserving XY centering.
+2. **Model-vs-Null Structural Validation**: Rigorously evaluates the *best optimized structural pose* from the Bayesian sampler. It splits the localizations into train/test folds and scores the fit against distinct null models:
+   - For 3D data: Scrambled points, Rotated model, Mirrored model, Radial randomized points.
+   - For 2D data: Scrambled points, Translated model (off-center shift), Radial points, Radial + Translated model. (Rotations and mirroring are replaced by translation since EMAN2 boxes are already projection-centered).
+3. **Fallback Separation**: If pure noise clusters are present, verifies that valid NPC clusters score higher than noise (gracefully skipped if only valid NPCs exist).
 
 ## License
 
@@ -124,7 +183,7 @@ TBD
 pytest tests/
 ```
 
-Expected result: **92 passed, 5 skipped** (skipped tests require CUDA).
+Expected result: **98 passed, 5 skipped** (skipped tests require CUDA or depend on specific validation thresholds).
 
 ## Citation
 

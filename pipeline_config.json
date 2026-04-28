@@ -11,10 +11,10 @@
             "GMM",
             "Distance"
         ],
-        "target_cluster_id": null
+        "target_cluster_id": 100
     },
     "filtering": {
-        "type": "random",
+        "type": "full",
         "filter": {
             "x_range": [
                 10000,
@@ -36,14 +36,14 @@
         "pixel_map": "pixel_map.json",
         "perform_geometric_merging": false,
         "min_cluster_size": 15,
-        "min_npc_points": 120
+        "min_npc_points": 50
     },
     "optimization": {
         "mode": "bayesian",
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",
-            "number_of_frames": 200,
+            "number_of_frames": 500,
             "monte_carlo_steps": 50,
             "score_weight": "auto",
             "max_rb_trans": 4.0,

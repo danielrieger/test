@@ -276,7 +276,7 @@ def test_stage7_sampling_brownian_dynamics_wires_components(monkeypatch):
 
 
 @pytest.mark.unit
-def test_stage8_validation_tree_held_out_all_zero_passes():
+def test_stage8_validation_tree_held_out_all_zero_does_not_auto_pass():
     res = validation_mod.validate_with_held_out_data(
         valid_cluster_score=-10.0,
         valid_n_points=10,
@@ -284,52 +284,128 @@ def test_stage8_validation_tree_held_out_all_zero_passes():
         held_out_n_points=[10, 10, 10],
         scoring_type="Tree",
     )
-    assert res.passed is True
+    assert res.passed is False
     assert res.metrics["held_out_all_zero"] is True
 
 
 @pytest.mark.unit
-def test_stage8_validation_distance_uses_same_cluster_normalization_as_tree():
+def test_stage8_validation_tree_distance_gmm_use_per_point_normalization():
     cluster_scores = {
         563: {
             "type": "Valid",
-            "n_points": 951,
-            "Tree": -882350.05,
-            "Distance": -882350.05,
+            "n_points": 100,
+            "Tree": -100.0,
+            "Distance": -100.0,
+            "GMM": -100.0,
         },
         10: {
             "type": "Noise",
             "n_points": 50,
-            "Tree": -3420.71,
-            "Distance": -3420.71,
+            "Tree": -250.0,
+            "Distance": -250.0,
+            "GMM": -250.0,
         },
         17: {
             "type": "Noise",
-            "n_points": 74,
-            "Tree": -7385.95,
-            "Distance": -7385.95,
-        },
-        29: {
-            "type": "Noise",
-            "n_points": 83,
-            "Tree": -4208.29,
-            "Distance": -4208.29,
+            "n_points": 100,
+            "Tree": -600.0,
+            "Distance": -600.0,
+            "GMM": -600.0,
         },
     }
 
     results = validation_mod.validate_scoring_separation(
-        cluster_scores, scoring_types=["Tree", "Distance"]
+        cluster_scores, scoring_types=["Tree", "Distance", "GMM"]
     )
     result_by_name = {r.test_name: r for r in results}
 
     assert bool(result_by_name["Separation_Tree"].passed)
     assert bool(result_by_name["Separation_Distance"].passed)
-    assert result_by_name["Separation_Tree"].metrics["mean_valid_per_pt"] == pytest.approx(
-        result_by_name["Separation_Distance"].metrics["mean_valid_per_pt"]
+    assert bool(result_by_name["Separation_GMM"].passed)
+    for name in ["Separation_Tree", "Separation_Distance", "Separation_GMM"]:
+        assert result_by_name[name].metrics["mean_valid_per_point"] == pytest.approx(-1.0)
+        assert result_by_name[name].metrics["mean_noise_per_point"] == pytest.approx(-5.5)
+
+
+@pytest.mark.unit
+def test_stage8_validation_separation_skips_without_noise_controls():
+    cluster_scores = {
+        1: {"type": "Valid", "n_points": 100, "Tree": -100.0},
+        2: {"type": "Valid", "n_points": 120, "Tree": -110.0},
+    }
+
+    results = validation_mod.validate_scoring_separation(cluster_scores, scoring_types=["Tree"])
+
+    assert len(results) == 1
+    assert results[0].test_name == "Separation_Tree"
+    assert results[0].skipped is True
+    assert results[0].metrics["skipped_reason"] == "missing_valid_or_noise_controls"
+
+
+@pytest.mark.unit
+def test_stage8_validation_2d_alignment_projects_model_z_to_data_plane():
+    pts = np.array(
+        [
+            [10.0, 0.0, 0.0],
+            [0.0, 10.0, 0.0],
+            [-10.0, 0.0, 0.0],
+            [0.0, -10.0, 0.0],
+        ],
+        dtype=float,
     )
-    assert result_by_name["Separation_Tree"].metrics["mean_noise_per_pt"] == pytest.approx(
-        result_by_name["Separation_Distance"].metrics["mean_noise_per_pt"]
+    model_coords = np.array(
+        [
+            [10.0, 0.0, -20.0],
+            [0.0, 10.0, 15.0],
+            [-10.0, 0.0, 30.0],
+            [0.0, -10.0, -5.0],
+        ],
+        dtype=float,
     )
+
+    transform = validation_mod._fit_alignment(pts, data_dim="auto")
+    aligned_model = validation_mod._align_model(model_coords, transform)
+
+    assert transform["data_dim"] == "2d"
+    assert np.allclose(aligned_model[:, :2], model_coords[:, :2])
+    assert np.allclose(aligned_model[:, 2], 0.0)
+
+
+@pytest.mark.unit
+def test_stage8_validation_2d_tree_passes_on_positive_effect_even_with_mixed_wins(monkeypatch):
+    class FakeWrapper:
+        call_idx = 0
+
+        def __init__(self, *args, **kwargs):
+            self.is_translated = kwargs["model_coords_override"][:, 0].mean() > 1.0
+
+        def evaluate(self):
+            FakeWrapper.call_idx += 1
+            if self.is_translated:
+                return -40.0
+            # Real and non-translated nulls alternate between slight wins/losses.
+            return -10.0 if FakeWrapper.call_idx % 2 else -9.0
+
+    import smlm_score.imp_modeling.restraint.scoring_restraint as sr_mod
+    monkeypatch.setattr(sr_mod, "ScoringRestraintWrapper", FakeWrapper)
+
+    theta = np.linspace(0, 2 * np.pi, 80, endpoint=False)
+    pts = np.column_stack([np.cos(theta), np.sin(theta), np.zeros_like(theta)])
+    model = np.column_stack([np.cos(theta[:8]), np.sin(theta[:8]), np.zeros(8)])
+
+    res = validation_mod.validate_model_vs_nulls(
+        cluster_points=pts,
+        model_coords=model,
+        scoring_type="Tree",
+        model=object(),
+        avs=[object()],
+        n_repeats=2,
+        n_nulls=4,
+    )
+
+    assert res.metrics["mean_delta"] > 0
+    assert res.metrics["win_rate"] <= 0.75
+    assert res.passed is True
 
 
 @pytest.mark.unit
@@ -403,17 +479,34 @@ def test_stage8_validation_cross_val_flow_mock(monkeypatch):
         inst_count += 1
     monkeypatch.setattr(FakeWrapper, "__init__", sneaky_init)
 
-    res = validation_mod.validate_cross_validated_npc(
+    res = validation_mod.validate_model_vs_nulls(
         cluster_points=pts,
         model_coords=np.zeros((10, 3)),
         scoring_type="Tree",
         model=object(),
-        avs=[object()]
+        avs=[object()],
+        n_repeats=2,
+        n_nulls=1,
     )
     
     assert res.passed is True
-    assert "Real ring structure outscores scrambled null" in res.details
-    assert res.metrics["separation_sigma"] > 0
+    assert res.test_name == "ModelVsNull_Tree"
+    assert res.metrics["win_rate"] >= 0.75
+    assert res.metrics["effect_size"] > 0
+
+
+@pytest.mark.unit
+def test_stage8_run_full_validation_never_returns_empty():
+    results = validation_mod.run_full_validation(
+        cluster_scores={},
+        held_out_results=None,
+        scoring_types=["Tree"],
+        cross_val_data=None,
+    )
+
+    assert len(results) == 1
+    assert results[0].test_name == "Validation_NotRun"
+    assert results[0].skipped is True
 @pytest.mark.unit
 @pytest.mark.parametrize("percent", [10, 25, 50, 100])
 def test_flexible_filter_percentage_exact_counts(percent):

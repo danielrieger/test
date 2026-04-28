@@ -44,7 +44,7 @@
         "bayesian": {
             "run_sampling": true,
             "scoring_type": "GMM",
-            "number_of_frames": 200,
+            "number_of_frames": 20000,
             "monte_carlo_steps": 50,
             "score_weight": "auto",
             "max_rb_trans": 4.0,

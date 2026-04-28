@@ -10,6 +10,7 @@ from smlm_score.utility.input import read_experimental_data
 from smlm_score.utility.data_handling import (
     flexible_filter_smlm_data,
     isolate_individual_npcs,
+    align_npc_cluster,
     align_npc_cluster_pca,
     get_held_out_complement
 )
@@ -74,9 +75,11 @@ def test_pipeline_e2e_top_to_bottom_execution():
         cluster_id = clustering_res['npc_info'][0]['cluster_id']
         npc_coords = coords[labels == cluster_id]
 
-        # --- Stage 4: PCA Alignment ---
-        alignment_res = align_npc_cluster_pca(npc_coords)
+        # --- Stage 4: 2D-aware Alignment ---
+        alignment_res = align_npc_cluster(npc_coords, data_dim="auto")
         aligned_data = alignment_res['aligned_data']
+        assert alignment_res["used_pca"] is False
+        assert np.allclose(alignment_res["rotation"], np.eye(3))
         
         # Verify centering (relaxed tolerance for float32 noise floor)
         mean_aligned = np.mean(aligned_data, axis=0)
@@ -109,7 +112,7 @@ def test_pipeline_e2e_top_to_bottom_execution():
             "Tree": {
                 "valid_score": -10.0,
                 "valid_n_points": len(npc_coords),
-                "held_out_scores": [0.0, 0.0], # Passing mock
+                "held_out_scores": [-100.0, -120.0],
                 "held_out_n_points": [int(0.2 * len(npc_coords))] * 2
             }
         }

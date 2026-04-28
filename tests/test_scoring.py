@@ -161,6 +161,29 @@ class TestComputeNbGMM:
         score = compute_nb_gmm(model, means, covs, weights)
         assert np.isfinite(score)
 
+    def test_component_search_handles_flat_z_2d_data(self):
+        """GMM fitting should not fail for EMAN2-style 2D data with z=0."""
+        from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
+
+        theta = np.linspace(0.0, 2.0 * np.pi, 128, endpoint=False)
+        data = np.column_stack(
+            [
+                50.0 * np.cos(theta),
+                50.0 * np.sin(theta),
+                np.zeros_like(theta),
+            ]
+        ).astype(np.float32)
+
+        result, gmm_sel, mean, cov, weight = test_gmm_components(
+            data, component_min=1, component_max=16
+        )
+
+        assert len(result["n_components"]) >= 1
+        assert mean.shape[1] == 3
+        assert cov.shape[1:] == (3, 3)
+        assert np.all(np.diagonal(cov, axis1=1, axis2=2) > 0)
+        assert np.isclose(np.sum(weight), 1.0)
+
     def test_offset_xyz_shifts_model(self):
         """Applying offset should be equivalent to shifting model coords."""
         mean, cov, weight = self._make_single_component_gmm([10.0, 0.0, 0.0])

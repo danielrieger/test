@@ -8,11 +8,16 @@ __pycache__/
 dist/
 build/
 
-# SMLM-IMP Simulation Outputs
-examples/*_output_*
+# SMLM-IMP Simulation Outputs (examples/ and root-level)
 examples/bayesian_cluster_*
 examples/frequentist_cluster_*
 examples/brownian_cluster_*
+examples/*_output_*
+bayesian_cluster_*
+frequentist_cluster_*
+brownian_cluster_*
+
+# Trajectory and structural output files
 *.rmf3
 *.rmf
 pdbs/
@@ -20,18 +25,26 @@ pdbs/
 # Large Input Data (see README for download instructions)
 examples/PDB_Data/*.cif
 examples/ShareLoc_Data/*.csv
+examples/picked_particles/
 
 # Project Caches & IDE
 .agents/
 .idea/
 .vscode/
 
-# Machine-specific
+# Machine-specific environment files
 activate_env.bat
+imp_paths.txt
+sys_path.txt
+verify_wsl_env.py
+current_deps.json
 
 # Personal / thesis docs
 thesis_text.txt
 review_notes.md
+260201_Bachelor_englisch_1.50.pdf
+old_npc_temp.py
+pipeline_config.json
 
 # Merge artifacts
 *.resolved
@@ -43,9 +56,3 @@ review_notes.md
 .eman2settings.json
 nnet_*.hdf
 trainout_*.hdf
-picked_particles/
-
-# Root-level simulation outputs
-bayesian_cluster_*
-frequentist_cluster_*
-brownian_cluster_*

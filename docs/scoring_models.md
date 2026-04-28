@@ -72,6 +72,9 @@ where:
 
 This formulation is best interpreted as a **point-cloud likelihood under a data-derived mixture model**. Compared with the earlier implementation, the important improvement is that the GMM is now treated as a true mixture: the component contributions are summed first and the logarithm is applied afterward.
 
+### Dimensionality Awareness
+The GMM engine is inherently dimensionality-aware. When evaluated on strictly 2D flat data (like EMAN2 extracted particles), it automatically identifies and fits only the active dimensions, avoiding singular covariance matrix failures. The inactive dimension is padded with a base regularization covariance to maintain a stable 3D likelihood space.
+
 ### Important Limitation
 
 The current GMM implementation remains asymmetric:

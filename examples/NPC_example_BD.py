@@ -17,8 +17,7 @@ from smlm_score.utility.data_handling import (
     compute_av,
     isolate_individual_npcs,
     isolate_npcs_from_eman2_boxes,
-    align_npc_cluster_pca,
-    get_held_out_complement
+    align_npc_cluster
 )
 from smlm_score.imp_modeling.scoring.gmm_score import test_gmm_components
 from smlm_score.imp_modeling.brownian_dynamics.simulation_setup import run_brownian_dynamics_simulation
@@ -28,24 +27,6 @@ from smlm_score.validation.validation import run_full_validation
 
 EXAMPLE_DIR = Path(__file__).parent
 
-def validate_config(config):
-    """Runtime validation of configuration parameters."""
-    print("--- Validating Configuration ---")
-    f_type = config["filtering"]["type"]
-    w_mode = config["optimization"]["bayesian"]["score_weight"]
-    c_method = config["clustering"].get("method", "hdbscan")
-    
-    if f_type == "none" and w_mode == "auto":
-        print("  WARNING: filtering.type='none' with score_weight='auto' may produce")
-        print("           very weak sampling constraints on large clusters. The weight")
-        print("           will be capped at 0.005 to prevent meaningless sampling.")
-        print("           See pipeline_config_template.jsonc for details.")
-        
-    if f_type == "none" and c_method == "eman2":
-        print("  INFO: With eman2 clustering on unfiltered data, noise separation")
-        print("        tests will be skipped (all boxes produce valid NPCs).")
-    print("--------------------------------")
-
 def load_config(config_file="pipeline_config.json"):
     """Load and return the pipeline configuration."""
     config_path = EXAMPLE_DIR / config_file
@@ -53,23 +34,6 @@ def load_config(config_file="pipeline_config.json"):
         raise FileNotFoundError(f"Configuration file not found: {config_path}")
     with open(config_path, "r") as f:
         config = json.load(f)
-    
-    validate_config(config)
-    
-    # --- Startup Diagnostics (Restored) ---
-    st = config["execution"]["test_scoring_types"]
-    mode = config["optimization"]["mode"]
-    cm = config["clustering"].get("method", "hdbscan")
-    
-    if mode == "frequentist" and config["optimization"]["frequentist"]["scoring_type"] == "GMM":
-        pass  # Previously unsupported, now fully supported!
-    if mode == "brownian" and config["optimization"]["brownian"]["scoring_type"] == "GMM":
-        pass  # Previously unsupported, now fully supported!
-        
-    print(f"Scoring types to test: {st}")
-    print(f"Optimization mode:     {mode}")
-    print(f"Clustering method:     {cm}")
-    
     return config
 
 def setup_system(pdb_path, parameters):
@@ -95,7 +59,10 @@ def run_evaluation(m, pdb_h, avs, res, coords, variances, config):
     min_npc = config["clustering"]["min_npc_points"]
     
     # 1. Restore strict Noise filtering (10 <= n < MIN_NPC_POINTS)
-    noise_info = [c for c in all_info if 10 <= c['n_points'] < min_npc]
+    if config["clustering"].get("method") == "eman2":
+        noise_info = []
+    else:
+        noise_info = [c for c in all_info if 10 <= c['n_points'] < min_npc]
     
     # 2. Restore Auto-Select Logic
     if target_id is None or target_id == "null":
@@ -143,20 +110,25 @@ def run_evaluation(m, pdb_h, avs, res, coords, variances, config):
             continue
             
         vars_ = variances[mask] if variances is not None else None
-        align = align_npc_cluster_pca(pts, debug=False)
+        align = align_npc_cluster(pts, data_dim="auto", debug=False)
         aligned_pts = align['aligned_data']
         rot = align['rotation']
         
         # Consistent model alignment for scoring
         model_aligned = np.dot(model_centered, rot.T)
+        if align.get('data_dim') == '2d':
+            model_aligned = model_aligned.copy()
+            model_aligned[:, 2] = 0.0
         
         if cid == target_id:
             target_n_points = n_pts
             cross_val_data = {
-                'cluster_points': aligned_pts,
-                'model_coords': model_aligned,
+                'cluster_points': pts,
+                'variances': vars_,
+                'model_coords': model_centered,
                 'model': m,
-                'avs': avs
+                'avs': avs,
+                'data_dim': align.get('data_dim', 'auto')
             }
 
         for ST in test_types:
@@ -186,7 +158,16 @@ def run_evaluation(m, pdb_h, avs, res, coords, variances, config):
                     target_s = score
 
                 if (cid == target_id or (target_id is None and ctype == "Valid")) and not already_optimized:
-                    already_optimized = trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts)
+                    opt_result = trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts)
+                    already_optimized = bool(opt_result)
+                    if (
+                        cid == target_id
+                        and cross_val_data is not None
+                        and isinstance(opt_result, dict)
+                        and opt_result.get("best_model_coords_nm") is not None
+                    ):
+                        cross_val_data["model_coords"] = opt_result["best_model_coords_nm"]
+                        cross_val_data["model_pose_source"] = "best_bayesian_sample"
 
         # Reset model state
         for i, av in enumerate(avs):
@@ -206,8 +187,20 @@ def trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts):
         else:
             w = float(opt["bayesian"].get("score_weight", 1.0))
         print(f"    Effective weight: {w:.6f} (n_pts={n_pts})")
-        run_bayesian_sampling(m, pdb_h, avs, sr, f"bayesian_cluster_{cid}", opt["bayesian"]["number_of_frames"], opt["bayesian"]["monte_carlo_steps"], w, opt["bayesian"]["max_rb_trans"], opt["bayesian"]["max_rb_rot"])
-        return True
+        sampling_result = run_bayesian_sampling(m, pdb_h, avs, sr, f"bayesian_cluster_{cid}", opt["bayesian"]["number_of_frames"], opt["bayesian"]["monte_carlo_steps"], w, opt["bayesian"]["max_rb_trans"], opt["bayesian"]["max_rb_rot"])
+        best_model_coords_nm = None
+        if isinstance(sampling_result, dict) and sampling_result.get("best_av_coords") is not None:
+            inner = getattr(sr, "scoring_restraint_instance", None)
+            if inner is not None and getattr(inner, "model_coords_override", None) is not None:
+                best_live_nm = np.asarray(sampling_result["best_av_coords"], dtype=np.float64) * inner.scaling
+                best_model_coords_nm = (
+                    np.asarray(inner.model_coords_override, dtype=np.float64)
+                    + (best_live_nm - inner.reference_model_coords_nm)
+                )
+        return {
+            "sampling_result": sampling_result,
+            "best_model_coords_nm": best_model_coords_nm,
+        }
     
     if mode == "frequentist" and ST == opt["frequentist"]["scoring_type"]:
         print(f"  [Frequentist] Triggering CG optimization for cluster {cid}...")
@@ -228,42 +221,10 @@ def trigger_opt(m, pdb_h, avs, sr, cid, ST, config, n_pts):
         return True
     return False
 
-def run_held_out(m, avs, df, cuts, target_s, target_n, test_types, model_baseline, config):
-    """Run cross-validation against held-out data chunks."""
-    ho_xyz, ho_var = get_held_out_complement(df, x_cut=cuts['x'], y_cut=cuts['y'], z_cut=cuts['z'], n_samples=200)
-    results = {}
-    if target_s is not None and len(ho_xyz) > 0:
-        for ST in test_types:
-            chunks, chunk_n = [], []
-            n_chunks = 5
-            c_size = len(ho_xyz) // n_chunks
-            for i in range(n_chunks):
-                c_xyz = ho_xyz[i*c_size:(i+1)*c_size]
-                c_var = ho_var[i*c_size:(i+1)*c_size]
-                if len(c_xyz) == 0: continue
-                c_xyz_c = c_xyz - c_xyz.mean(axis=0)
-                try:
-                    if ST == "Tree": sr = ScoringRestraintWrapper(m, avs, kdtree_obj=KDTree(c_xyz_c), dataxyz=c_xyz_c, var=c_var, type=ST, model_coords_override=model_baseline)
-                    elif ST == "GMM":
-                        _, gmm, mu, cov, w = test_gmm_components(c_xyz_c.astype(np.float64), reg_covar=1e-4)
-                        sr = ScoringRestraintWrapper(
-                            m, avs, gmm_sel_components=gmm.n_components, 
-                            gmm_sel_mean=mu, gmm_sel_cov=cov, gmm_sel_weight=w, type=ST, 
-                            model_coords_override=model_baseline,
-                            model_variance=config.get("optimization", {}).get("model_variance", 8.0)
-                        )
-                    elif ST == "Distance":
-                        cl = [np.eye(3)*max(v,1e-9) for v in c_var]
-                        sr = ScoringRestraintWrapper(m, avs, dataxyz=c_xyz_c, var=cl, type=ST, model_coords_override=model_baseline)
-                    chunks.append(sr.evaluate())
-                    chunk_n.append(len(c_xyz))
-                except Exception as e: print(f"Held-out failed for {ST}: {e}")
-            if chunks:
-                results[ST] = {'valid_score': target_s, 'valid_n_points': target_n, 'held_out_scores': chunks, 'held_out_n_points': chunk_n}
-    return results
 
 def main():
-    print("--- SMLM-IMP Modeling Pipeline (Refactored) ---")
+    IMP.set_log_level(IMP.SILENT)
+    print("--- Initializing SMLM-IMP ---")
     config = load_config()
     
     # Paths & Parameters
@@ -297,6 +258,22 @@ def main():
     # Global System Setup
     m, pdb_h, avs = setup_system(pdb_data, params)
     
+    # --- Consolidated Metadata Banner ---
+    st = config["execution"]["test_scoring_types"]
+    mode = config["optimization"]["mode"]
+    cm = config["clustering"].get("method", "hdbscan")
+    bead_count = len(IMP.atom.get_leaves(pdb_h))
+    
+    print("\n" + "═" * 50)
+    print("SMLM-IMP Modeling Pipeline")
+    print("─" * 50)
+    print(f"Model:        7N85 (8-fold NPC ring)")
+    print(f"Resolution:   {params.get('downsample_residues_per_bead')} AAs/bead | {bead_count} beads | {len(avs)} AVs")
+    print(f"Data:         {paths['smlm_data']}")
+    print(f"Clustering:   {cm}")
+    print(f"Optimization: {mode} ({st})")
+    print("═" * 50)
+    
     # Clustering
     if config["clustering"]["method"] == "eman2":
         res = isolate_npcs_from_eman2_boxes(coords, EXAMPLE_DIR / config["clustering"]["eman2_boxes"], EXAMPLE_DIR / config["clustering"].get("pixel_map", "pixel_map.json"))
@@ -306,18 +283,16 @@ def main():
     # Main Analysis
     scores, cv_data, t_s, t_n, m_base = run_evaluation(m, pdb_h, avs, res, coords, vars_, config)
 
-    # Validation
-    ho_results = run_held_out(m, avs, df, cuts, t_s, t_n, config["execution"]["test_scoring_types"], m_base, config)
+    # Validation (Cross-Validation only)
+    target_id = config["execution"]["target_cluster_id"]
     
     print("\n=== CLUSTER SCORING SUMMARY ===")
     print("ID   | Type  | N_pts |  Tree Score       | GMM Score      | Distance Score")
     for cid, s in sorted(scores.items()):
         print(f"{cid:4} | {s['type']:5} | {s['n_points']:5} | {s.get('Tree',0):16.2f} | {s.get('GMM',0):14.2f} | {s.get('Distance',0):14.2f}")
 
-    run_full_validation(cluster_scores=scores, held_out_results=ho_results, scoring_types=["Tree", "GMM"], cross_val_data=cv_data)
+    run_full_validation(cluster_scores=scores, held_out_results=None, scoring_types=["Tree", "GMM"], cross_val_data=cv_data, cluster_id=target_id)
     
-    if config["optimization"]["mode"] != "brownian":
-        print("\nNote: Brownian Dynamics simulation is currently DISABLED for screening mode.")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,36 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/daniel/Thesis/smlm_score
+configfile: pytest.ini
+plugins: anyio-4.13.0
+collected 0 items / 1 error
+
+==================================== ERRORS ====================================
+____________________ ERROR collecting tests/test_scoring.py ____________________
+ImportError while importing test module '/home/daniel/Thesis/smlm_score/tests/test_scoring.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../miniforge3/envs/smlm/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_scoring.py:19: in <module>
+    from smlm_score.imp_modeling.scoring.gmm_score import _compute_nb_gmm_cpu
+E   ImportError: cannot import name '_compute_nb_gmm_cpu' from 'smlm_score.imp_modeling.scoring.gmm_score' (/home/daniel/Thesis/smlm_score/src/smlm_score/imp_modeling/scoring/gmm_score.py)
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241: 11 warnings
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:241: 11 warnings
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:241
+<frozen importlib._bootstrap>:241
+<frozen importlib._bootstrap>:241
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/test_scoring.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+======================== 26 warnings, 1 error in 1.76s =========================
