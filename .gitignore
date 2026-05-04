@@ -8,24 +8,41 @@ __pycache__/
 dist/
 build/
 
-# SMLM-IMP Simulation Outputs (examples/ and root-level)
-examples/bayesian_cluster_*
-examples/frequentist_cluster_*
-examples/brownian_cluster_*
-examples/*_output_*
-bayesian_cluster_*
-frequentist_cluster_*
-brownian_cluster_*
+# SMLM-IMP simulation outputs (local only)
+bayesian_cluster_*/
+frequentist_cluster_*/
+brownian_cluster_*/
+examples/bayesian_cluster_*/
+examples/frequentist_cluster_*/
+examples/brownian_cluster_*/
+*_output_*/
+examples/*_output_*/
 
 # Trajectory and structural output files
 *.rmf3
 *.rmf
+rmfs/
 pdbs/
+initial.*.rmf3
+full_trajectory.rmf3
+av_trajectory.rmf3
+bd_trajectory.rmf
+frame_scores.csv
+stat*.out
+stat_replica*.out
+best.scores.rex.py
+av_coordinates_final.csv
 
-# Large Input Data (see README for download instructions)
-examples/PDB_Data/*.cif
-examples/ShareLoc_Data/*.csv
+# Large input data (see README for download instructions)
+smlm_data.zip
+examples/PDB_Data/
+examples/ShareLoc_Data/
 examples/picked_particles/
+
+# EMAN2 / MRC intermediate artifacts
+*.mrc
+*.hdf
+examples/info/boxrefs*.hdf
 
 # Project Caches & IDE
 .agents/

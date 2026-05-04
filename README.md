@@ -24,21 +24,27 @@ Bayesian scoring of Single-Molecule Localization Microscopy (SMLM) data against 
 
 ### Prerequisites
 
-- Python ≥ 3.11
+- Python >= 3.11
 - [IMP](https://integrativemodeling.org/) with the `IMP.bff` module
 - CUDA toolkit (optional, for GPU acceleration)
+- EMAN2 (optional, only for particle-picking workflows)
 
 ### Setup
 
 ```bash
 git clone https://github.com/danielrieger/test.git
 cd test
-pip install -e .
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ### Environment
 
-This project was developed with a conda-pack environment (Python 3.11). Core dependencies are listed in `requirements.txt`. The IMP library must be installed separately following the [IMP installation guide](https://integrativemodeling.org/nightly/doc/manual/installation.html).
+This project was developed with a conda-pack environment (Python 3.11). Core Python dependencies are listed in `requirements.txt`; package metadata is in `pyproject.toml`.
+
+IMP is the main non-standard dependency. Install it separately following the [IMP installation guide](https://integrativemodeling.org/nightly/doc/manual/installation.html), and verify that `python -c "import IMP, IMP.bff"` works in the same environment used for this repository.
+
+`environment.toml` documents the original local Windows environment. It is useful as a reference, but its absolute paths are machine-specific and should not be copied unchanged on another computer.
 
 ### Documentation
 
@@ -51,12 +57,29 @@ For mathematical details and current method limitations, see:
 
 ## Input Data
 
-The following large input files are **not included** in this repository. Download them and place them in the indicated directories:
+The large input data are **not included** in this repository. Download `smlm_data.zip` from Google Drive:
 
-| File | Size | Source | Destination |
-|------|------|--------|-------------|
-| `7N85-assembly1.cif` | 112 MB | [RCSB PDB: 7N85](https://www.rcsb.org/structure/7N85) | `examples/PDB_Data/` |
-| `data.csv` | 29 MB | [ShareLoc repository](https://shareloc.xyz) | `examples/ShareLoc_Data/` |
+[Download smlm_data.zip](https://drive.google.com/file/d/1sIxsT4pOP84Gcn6Pubpu_rrapwKZRg5R/view?usp=sharing)
+
+Extract the archive into `examples/` so that the repository contains the following local-only folders:
+
+| Path after extraction | Size | Purpose |
+|------|------|---------|
+| `examples/PDB_Data/7N85-assembly1.cif` | 112 MB | NPC structural model from [RCSB PDB: 7N85](https://www.rcsb.org/structure/7N85) |
+| `examples/ShareLoc_Data/data.csv` | 29 MB | SMLM localization table |
+
+The default example configuration also uses small metadata files that stay in Git:
+
+| Path | Purpose |
+|------|---------|
+| `examples/av_parameter.json` | Dye-accessible-volume setup: chains, residue, atom, and linker parameters |
+| `examples/info/micrograph_info.json` | EMAN2-picked box centers used when `clustering.method` is `eman2` |
+| `examples/pixel_map.json` | Pixel-to-nanometer conversion for EMAN2 boxes |
+
+The SMLM CSV is expected to contain `x [nm]`, `y [nm]`, and `Amplitude_0_0`. If `z [nm]` is absent, the pipeline fills it with `0.0` for 2D workflows.
+
+These input folders are ignored by Git and should stay local. Generated output directories such as `bayesian_cluster_*`, `frequentist_cluster_*`, and `brownian_cluster_*` are also local-only and should not be committed.
+
 ## Visual Gallery
 
 The pipeline generates publication-quality visualizations for structural alignment, quality control, and Bayesian posterior analysis.
@@ -66,13 +89,13 @@ The pipeline generates publication-quality visualizations for structural alignme
 <!-- slide -->
 ![Posterior AV Density Map (20,000 Frames)](examples/figures/Posterior/posterior_density_20000f.png)
 <!-- slide -->
-![Top-Ranked NPC (Cluster 347) — GMM Overlay](examples/figures/qc/gmm_cluster_overlay_rank0_id347.png)
+![Top-Ranked NPC GMM Overlay](examples/figures/qc/gmm_cluster_overlay_best.png)
 <!-- slide -->
-![Stylized 3D Isosurface Model](examples/figures/methodology/npc_isosurface_3d.png)
+![Structural Alignment Grid](examples/figures/methodology/alignment_grid_3d.png)
 <!-- slide -->
-![Structural Alignment PCA Summary](examples/figures/methodology/alignment_summary_pca.png)
+![Detailed 3D Alignment](examples/figures/methodology/alignment_detailed_3d.png)
 <!-- slide -->
-![Iterative 2D Fitting Sequence](examples/figures/methodology/fitting_sequence_2d.png)
+![Iterative 2D Fitting Sequence](examples/figures/methodology/fitting_sequence_wu_style.png)
 ````
 
 ## Performance Benchmarking
@@ -87,9 +110,14 @@ A core technical contribution of this work is the implementation of a **Gaussian
 ## Quick Start
 
 1. **Setup**: Clone the repo and install the environment (see Setup above).
-2. **Data**: Place `7N85-assembly1.cif` in `examples/PDB_Data/` and `data.csv` in `examples/ShareLoc_Data/`.
-3. **Run Pipeline**: `python examples/NPC_example_BD.py`
-4. **Generate Thesis Figures**:
+2. **Data**: Download `smlm_data.zip` from the link above and extract `PDB_Data/` and `ShareLoc_Data/` into `examples/`.
+3. **Check the installation**:
+   ```bash
+   python -c "import smlm_score; import IMP; import IMP.bff; print('ok')"
+   ```
+4. **Review configuration**: open `examples/pipeline_config.json`. For a lightweight first run, reduce `optimization.bayesian.number_of_frames`.
+5. **Run Pipeline**: `python examples/NPC_example_BD.py`
+6. **Generate Thesis Figures**:
    - `python examples/visualize_alignment_stylized_3d.py` (3D Gallery)
    - `python examples/visualize_gmm_selection.py` (BIC & GMM QC)
    - `python examples/benchmark_scoring.py` (Performance Scaling)
@@ -98,23 +126,16 @@ A core technical contribution of this work is the implementation of a **Gaussian
 
 ```
 smlm_score/
-├── src/
-│   ├── imp_modeling/
-│   │   ├── scoring/             # Tree, GMM, Distance scoring + CUDA kernels
-│   │   └── restraint/           # IMP restraint wrappers (ScoringRestraintWrapper)
-│   ├── utility/
-│   │   ├── data_handling.py     # Structural ranking, HDBSCAN, PCA alignment
-│   │   └── visualization.py     # Stylized 3D (Pyvista) & Publication White themes
-│   ├── docs/
-│   │   ├── eman2_workflow.md    # High-Res Picking workflow
-│   │   └── scoring_models.md    # Physics/Scoring background
-│   ├── examples/
-│   │   ├── figures/             # Categorized Thesis Assets
-│   │   ├── benchmarks/          # Scaling and performance plots
-│   │   └── qc/                  # GMM BIC selection and top-ranked overlays
-│   ├── benchmark_scoring.py     # Performance scaling benchmark
-│   └── visualize_gmm_selection.py # Intelligent NPC selection & BIC plots
-└── tests/                       # 97 pytest tests
+|-- src/smlm_score/
+|   |-- imp_modeling/
+|   |   |-- scoring/       # Tree, GMM, Distance scoring + CUDA kernels
+|   |   |-- restraint/     # IMP restraint wrappers
+|   |   `-- simulation/    # Brownian, frequentist, and Bayesian optimization
+|   |-- utility/           # Input, filtering, clustering, AV setup, visualization
+|   `-- validation/        # Model-vs-null and cross-validation routines
+|-- examples/              # Runnable workflows, configs, and figure scripts
+|-- docs/                  # Method notes and workflow documentation
+`-- tests/                 # Unit and integration tests
 ```
 
 ## Advanced Workflows
@@ -151,6 +172,21 @@ For a detailed step-by-step guide, see: [EMAN2 Workflow & High-Res Picking](docs
 - **Targeted Modeling** of 300+ picked NPCs.
 
 *Technical Note: If your box metadata is lost, use `examples/recover_boxes.py` to rebuild it from existing CSV fragments.*
+
+## Repository Hygiene
+
+The GitHub repository is intended to contain source code, documentation, lightweight configuration files, tests, and selected final figures. It should not contain raw input data or generated simulation outputs.
+
+Keep these paths local or in external storage:
+
+- `examples/PDB_Data/`
+- `examples/ShareLoc_Data/`
+- `smlm_data.zip`
+- `bayesian_cluster_*/`, `frequentist_cluster_*/`, `brownian_cluster_*/`
+- `examples/bayesian_cluster_*/`, `examples/frequentist_cluster_*/`, `examples/brownian_cluster_*/`
+- `*.rmf`, `*.rmf3`, `*.mrc`, `*.hdf`
+
+If a generated file is needed for a thesis figure, document how to reproduce it or store it in an external data package. Do not commit large intermediate trajectories or EMAN2 training outputs.
 
 ## Maintenance & Data Safety
 
